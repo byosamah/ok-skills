@@ -1,0 +1,23 @@
+{
+  "name": "ok-skills",
+  "description": "Osama Khalil's skill collection for Claude Code and Codex — Three.js game development and pixel-perfect website cloning.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Osama Khalil",
+    "url": "https://osama.me"
+  },
+  "homepage": "https://skills.osama.me",
+  "repository": "https://github.com/byosamah/ok-skills",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "threejs",
+    "3d",
+    "games",
+    "cloning",
+    "website-cloning",
+    "gemini",
+    "webdev",
+    "creative"
+  ]
+}
