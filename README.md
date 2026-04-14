@@ -96,13 +96,13 @@ None. This is a pure knowledge skill — no API keys, no external dependencies. 
 
 ---
 
-### 🌐 cloningv6
+### 🌐 cloning
 
 **Clone any website to 100% fidelity.** Not 90%. Not "close enough." 100%. Uses a 13-phase extraction pipeline powered by Gemini 3.1 Pro, with self-healing visual verification loops that push relentlessly until every section, every badge color, every animation, every pixel matches the original.
 
 #### What It Does
 
-When you invoke `/cloningv6`, your AI orchestrates a complete extraction-to-generation pipeline: it captures the target site from every angle (screenshots, videos, computed styles, assets, animations), feeds everything to Gemini 3.1 Pro for code generation, then enters a visual verification loop comparing the clone against the original until fidelity reaches 100%.
+When you invoke `/cloning`, your AI orchestrates a complete extraction-to-generation pipeline: it captures the target site from every angle (screenshots, videos, computed styles, assets, animations), feeds everything to Gemini 3.1 Pro for code generation, then enters a visual verification loop comparing the clone against the original until fidelity reaches 100%.
 
 #### How It Works — The 13-Phase Pipeline
 
@@ -168,7 +168,7 @@ When you invoke `/cloningv6`, your AI orchestrates a complete extraction-to-gene
 #### Usage
 
 ```
-/cloningv6
+/cloning
 ```
 
 **Full clone:**
@@ -178,7 +178,7 @@ Clone https://example.com to 100% fidelity
 
 **Refine an existing clone:**
 ```
-/cloningv6 --refine
+/cloning --refine
 The hero section animation timing is off — fix it to match the original
 ```
 
@@ -210,7 +210,7 @@ The hero section animation timing is off — fix it to match the original
 
 ## Requirements Overview
 
-| Requirement | threejs-master | cloningv6 |
+| Requirement | threejs-master | cloning |
 |------------|:-:|:-:|
 | Claude Code or Codex | ✅ | ✅ |
 | API Keys | — | `GEMINI_API_KEY` |
@@ -233,7 +233,7 @@ claude plugins install --from github:byosamah/ok-skills
 claude plugins install --from github:byosamah/ok-skills --scope project
 ```
 
-After installation, skills appear in your skill list. Invoke them by name (`/threejs-master`, `/cloningv6`) or let Claude auto-detect when they're relevant to your task.
+After installation, skills appear in your skill list. Invoke them by name (`/threejs-master`, `/cloning`) or let Claude auto-detect when they're relevant to your task.
 
 ---
 

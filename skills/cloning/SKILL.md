@@ -1,11 +1,11 @@
 ---
-name: cloningv6
+name: cloning
 description: |
   Clone any website to 100% fidelity — not 90%, not "close enough", 100%.
   Generates with Gemini 3.1 Pro, then pushes relentlessly through a self-healing visual loop
   until every section, every badge color, every animation, every pixel matches the original.
   Playwright-only deterministic pipeline. Never stops until the clone is indistinguishable.
-  Use when user says "clone this website", "/cloningv6 [URL]", "perfect clone this design",
+  Use when user says "clone this website", "/cloning [URL]", "perfect clone this design",
   or wants to replicate any website's visual design. Also use when the user mentions
   "website cloning", "copy this design", "replicate this UI", "match this site exactly",
   "keep fixing", "push to 100%", or "refine the clone".
@@ -14,7 +14,7 @@ context: fork
 effort: max
 ---
 
-# Website Cloning Skill v6.0 (cloningv6)
+# Website Cloning Skill v6.0
 
 Clone any website with **100% fidelity**. Not 90%. Not "close enough." 100%.
 
@@ -44,8 +44,8 @@ Get a key: [Google AI Studio](https://aistudio.google.com/apikey)
 ## Quick Start
 
 ```
-/cloningv6 https://example.com          # Full clone: extract + generate + refine
-/cloningv6 --refine ~/Desktop/my-clone  # Refine mode: skip generation, go straight to visual fix loop
+/cloning https://example.com          # Full clone: extract + generate + refine
+/cloning --refine ~/Desktop/my-clone  # Refine mode: skip generation, go straight to visual fix loop
 ```
 
 ---
@@ -295,7 +295,7 @@ After evaluator passes, run automated code checks. Full details: [verification-p
 
 ### Basic Clone
 ```
-User: /cloningv6 https://stripe.com
+User: /cloning https://stripe.com
 Claude: [Runs orchestrator → all phases automated]
         [Sends to Gemini with 3 videos + section close-ups]
         [Spawns evaluator subagent → scores per dimension]
