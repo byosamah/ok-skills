@@ -2,7 +2,7 @@
 
 A curated collection of production-ready skills for [Claude Code](https://claude.ai/code) and [Codex](https://openai.com/index/introducing-codex/) by [Osama Khalil](https://osama.me).
 
-OK-Skills gives your AI coding assistant deep expertise in **Three.js game development** and **pixel-perfect website cloning**. Each skill is a self-contained knowledge base with guides, reference documentation, and executable scripts that the AI reads and follows to produce expert-level output.
+OK-Skills gives your AI coding assistant deep expertise in **Three.js game development**, **pixel-perfect website cloning**, and **Tony Fadell-style product spec review**. Each skill is a self-contained knowledge base with guides, reference documentation, and (where applicable) executable scripts that the AI reads and follows to produce expert-level output.
 
 ---
 
@@ -208,16 +208,62 @@ The hero section animation timing is off — fix it to match the original
 
 ---
 
+### 🛠️ tony-fadell
+
+**Spec/PRD reviewer in Tony Fadell's voice.** Reads a markdown spec, scores it 0 to 10 on each of the Core 5 pillars from his book *Build* (Story-first, Painkiller-vs-Vitamin, V1 Painted-Door, Heartbeats, Make-the-Invisible-Visible), and writes a sidecar review file with a composite score, per-pillar diagnoses citing specific spec lines, and Fadell-flavored rewrites of weak sections you can copy-paste.
+
+#### What It Does
+
+When you invoke `/tony-fadell` and pass a path to a markdown spec, your AI assistant becomes Tony Fadell for the duration of the review. It scores the spec on five pillars, anchors every observation to specific lines in the spec (no vague hand-waving), and produces a sidecar `.tony-fadell-review.md` file next to your spec with concrete rewrites you can drop straight into the next revision.
+
+#### What's Inside
+
+**Main Guide (SKILL.md)** covers:
+- The Core 5 pillars from *Build* with operational rubrics for each
+- Voice rules (first person, present tense, blunt but helpful)
+- Scoring procedure with composite score weighting
+- Structured review-writing workflow with required sections
+- When to use this skill (and when not to: code review, UI review, copy review have other tools)
+
+**2 Reference Files:**
+
+| Reference | What It Covers |
+|-----------|---------------|
+| `pillar-rubrics.md` | Detailed 0 to 10 scoring rubrics for each Core 5 pillar with calibration anchors and disqualifying patterns |
+| `source-canon.md` | Citation index pointing every Fadell quote and framing back to specific chapters of *Build*, podcast interviews, and posts. Keeps the persona grounded in real source material. |
+
+**1 Asset:**
+
+- `sidecar-template.md`: The exact markdown template the skill writes to disk. Composite score header, per-pillar sections, copy-pasteable rewrites of weak sections.
+
+#### Usage
+
+```
+/tony-fadell path/to/SPEC.md
+```
+
+**Example prompts after invoking:**
+- "Fadell-review this PRD before I take it to the team"
+- "Is this a painkiller or a vitamin?"
+- "Score this against the Build pillars and rewrite the weak sections"
+- "Sharpen this spec before I run /superpowers:writing-plans on it"
+
+#### Requirements
+
+None. Pure knowledge skill, no API keys, no external dependencies. Operates entirely on a local markdown file you point it at.
+
+---
+
 ## Requirements Overview
 
-| Requirement | threejs-master | cloning |
-|------------|:-:|:-:|
-| Claude Code or Codex | ✅ | ✅ |
-| API Keys | — | `GEMINI_API_KEY` |
-| Python 3.12+ | — | ✅ |
-| Node.js | — | ✅ |
-| Playwright | — | ✅ |
-| ImageMagick | — | Optional |
+| Requirement | threejs-master | cloning | tony-fadell |
+|------------|:-:|:-:|:-:|
+| Claude Code or Codex | ✅ | ✅ | ✅ |
+| API Keys | (none) | `GEMINI_API_KEY` | (none) |
+| Python 3.12+ | (none) | ✅ | (none) |
+| Node.js | (none) | ✅ | (none) |
+| Playwright | (none) | ✅ | (none) |
+| ImageMagick | (none) | Optional | (none) |
 
 ---
 

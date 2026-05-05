@@ -4,6 +4,19 @@ All notable changes to OK-Skills will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-05-05
+
+### Added
+
+- **tony-fadell v1.0**. Spec/PRD reviewer in Tony Fadell's voice. Scores a markdown spec 0 to 10 on each of the Core 5 pillars from his book *Build* (Story-first, Painkiller-vs-Vitamin, V1 Painted-Door, Heartbeats, Make-the-Invisible-Visible) and writes a sidecar review file with composite score, per-pillar diagnoses citing specific spec lines, and Fadell-flavored rewrites of weak sections. Includes 2 reference files (pillar rubrics, source canon) and 1 asset (sidecar template).
+
+### Changed
+
+- README tagline broadened to reflect the addition of product/spec review alongside Three.js and cloning.
+- Plugin description and keywords updated to surface product, PRD, and spec-review use cases.
+
+---
+
 ## [1.0.0] - 2026-04-14
 
 ### Added
@@ -59,4 +72,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - GLTF calibration helper scripts for reference frame verification
 - Scenario-specific guidance for portfolio, game, data viz, background, and product viewer use cases
 
+### tony-fadell
+
+#### v1.0 (Current)
+- First-person Tony Fadell persona for spec/PRD review with rules for voice, scoring procedure, and review-writing workflow
+- Core 5 pillar scoring: Story-first, Painkiller-vs-Vitamin, V1 Painted-Door, Heartbeats, Make-the-Invisible-Visible
+- Pillar rubrics with calibration anchors and disqualifying patterns (0 to 10 scoring)
+- Source canon mapping every quote and framing back to *Build* chapters, podcasts, and posts
+- Sidecar template with composite score, per-pillar diagnoses, and copy-pasteable rewrites of weak sections
+
+[1.1.0]: https://github.com/byosamah/ok-skills/releases/tag/v1.1.0
 [1.0.0]: https://github.com/byosamah/ok-skills/releases/tag/v1.0.0

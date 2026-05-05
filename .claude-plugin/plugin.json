@@ -1,7 +1,7 @@
 {
   "name": "ok-skills",
-  "description": "Osama Khalil's skill collection for Claude Code and Codex — Three.js game development and pixel-perfect website cloning.",
-  "version": "1.0.0",
+  "description": "Osama Khalil's skill collection for Claude Code and Codex. Three.js game development, pixel-perfect website cloning, and Tony Fadell-style spec review.",
+  "version": "1.1.0",
   "author": {
     "name": "Osama Khalil",
     "url": "https://osama.me"
@@ -18,6 +18,10 @@
     "website-cloning",
     "gemini",
     "webdev",
-    "creative"
+    "creative",
+    "product",
+    "prd",
+    "spec-review",
+    "tony-fadell"
   ]
 }
