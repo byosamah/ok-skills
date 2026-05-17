@@ -2,7 +2,7 @@
 
 A curated collection of production-ready skills for [Claude Code](https://claude.ai/code) and [Codex](https://openai.com/index/introducing-codex/) by [Osama Khalil](https://osama.me).
 
-OK-Skills gives your AI coding assistant deep expertise in **Three.js game development**, **pixel-perfect website cloning**, and **Tony Fadell-style product spec review**. Each skill is a self-contained knowledge base with guides, reference documentation, and (where applicable) executable scripts that the AI reads and follows to produce expert-level output.
+OK-Skills gives your AI coding assistant deep expertise in **Three.js game development**, **pixel-perfect website cloning**, **Tony Fadell-style product spec review**, and **Google DESIGN.md design-system extraction from any live website**. Each skill is a self-contained knowledge base with guides, reference documentation, and (where applicable) executable scripts that the AI reads and follows to produce expert-level output.
 
 ---
 
@@ -254,16 +254,76 @@ None. Pure knowledge skill, no API keys, no external dependencies. Operates enti
 
 ---
 
+### 🎨 designmd-ripper
+
+**Generate a 100% spec-compliant Google DESIGN.md from any public website.** Deeply extracts the live design system via Playwright (colors, typography, spacing, components, layout, fonts, shadows), proposes subpages for review, then synthesizes a DESIGN.md conforming to the canonical Google design.md schema with zero lint errors. Output is portable to Stitch, Tailwind, and Figma.
+
+#### What It Does
+
+When you invoke `/designmd-ripper` with a URL, your AI extracts the site's design system from the live DOM (not guesses from screenshots), proposes which subpages to crawl for full coverage, then synthesizes a single markdown file with YAML frontmatter (design tokens) plus body-section rationale prose. The output must lint clean against the canonical linter: 0 errors, 0 warnings, 1 info (the unavoidable `token-summary`).
+
+#### What's Inside
+
+**Main Guide (SKILL.md)** covers:
+- Reference-file reading order (spec, synthesis guide, linting rules, canonical example, CLI)
+- The extraction pipeline: Playwright crawl, computed-style harvesting, asset capture
+- Subpage proposal protocol (always confirm scope with the user before crawling)
+- Synthesis workflow from raw signals to spec-correct fields
+- Lint loop: run, parse findings, fix, repeat until clean
+- When to use vs. `cloning` (for code) and `design-review` (for critique)
+
+**5 Reference Files:**
+
+| Reference | What It Covers |
+|-----------|---------------|
+| `spec.md` | The full canonical Google DESIGN.md specification. Frontmatter schema, section order, every accepted token shape. Read in full before writing any DESIGN.md. |
+| `synthesis-guide.md` | Mapping layer from raw extraction signals to spec-correct fields, plus a 12-item strictness checklist. Read every time before composing the file. |
+| `linting-rules.md` | All 8 lint rules with trigger conditions and fix patterns. Consult whenever a lint run reports findings. |
+| `canonical-example.md` | The official "Atmospheric Glass" example. Read once to see what a complete, real DESIGN.md looks like: copy its structure and density, not its tokens. |
+| `cli.md` | `@google/design.md` CLI reference for `init`, `lint`, `apply`, and stylesheet emission. |
+
+**3 Scripts:**
+
+- `extract.py`: Playwright-driven extraction pipeline. Captures computed styles, typography, spacing scales, color usage, shadows, radii, and motion signals from a URL.
+- `render_brief.py`: Synthesizes the raw extraction signals into a spec-correct DESIGN.md draft, ready for the lint loop.
+- `lint.sh`: Wraps the canonical linter and reports findings against the strictness checklist.
+
+**1 Asset:**
+
+- `template.md`: Starter skeleton matching the canonical frontmatter and section order.
+
+#### Usage
+
+```
+/designmd-ripper https://example.com
+```
+
+**Example prompts after invoking:**
+- "Extract the design system for stripe.com into a DESIGN.md"
+- "Capture linear.app's visual identity as a spec file I can hand to Stitch"
+- "Make a design.md from notion.so, include /pricing and /product as subpages"
+- "What is this site's design system? Output as Google DESIGN.md."
+
+#### Requirements
+
+| Requirement | Details |
+|------------|---------|
+| Playwright | For DOM extraction (`npx playwright install`) |
+| Python 3.12+ | For `extract.py` and `render_brief.py` |
+| `@google/design.md` CLI | *Optional*. For local linting (skill can run lint via npx) |
+
+---
+
 ## Requirements Overview
 
-| Requirement | threejs-master | cloning | tony-fadell |
-|------------|:-:|:-:|:-:|
-| Claude Code or Codex | ✅ | ✅ | ✅ |
-| API Keys | (none) | `GEMINI_API_KEY` | (none) |
-| Python 3.12+ | (none) | ✅ | (none) |
-| Node.js | (none) | ✅ | (none) |
-| Playwright | (none) | ✅ | (none) |
-| ImageMagick | (none) | Optional | (none) |
+| Requirement | threejs-master | cloning | tony-fadell | designmd-ripper |
+|------------|:-:|:-:|:-:|:-:|
+| Claude Code or Codex | ✅ | ✅ | ✅ | ✅ |
+| API Keys | (none) | `GEMINI_API_KEY` | (none) | (none) |
+| Python 3.12+ | (none) | ✅ | (none) | ✅ |
+| Node.js | (none) | ✅ | (none) | Optional |
+| Playwright | (none) | ✅ | (none) | ✅ |
+| ImageMagick | (none) | Optional | (none) | (none) |
 
 ---
 
@@ -279,7 +339,7 @@ claude plugins install --from github:byosamah/ok-skills
 claude plugins install --from github:byosamah/ok-skills --scope project
 ```
 
-After installation, skills appear in your skill list. Invoke them by name (`/threejs-master`, `/cloning`) or let Claude auto-detect when they're relevant to your task.
+After installation, skills appear in your skill list. Invoke them by name (`/threejs-master`, `/cloning`, `/tony-fadell`, `/designmd-ripper`) or let Claude auto-detect when they're relevant to your task.
 
 ---
 

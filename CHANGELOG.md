@@ -4,6 +4,19 @@ All notable changes to OK-Skills will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-05-17
+
+### Added
+
+- **designmd-ripper v1.0**. Generate a 100% spec-compliant Google DESIGN.md file from any public website URL. Deeply extracts the live design system via Playwright (colors, typography, spacing, components, layout, fonts, shadows), proposes subpages for user approval, then synthesizes a DESIGN.md conforming to the canonical Google design.md schema with zero lint errors. Output is portable to Stitch, Tailwind, and Figma. Includes 5 reference files (full spec, synthesis guide, linting rules, canonical example, CLI reference), 3 scripts (`extract.py` for Playwright extraction, `render_brief.py` for synthesis, `lint.sh` for validation), and 1 template asset.
+
+### Changed
+
+- README tagline and intro updated to mention design-system extraction alongside the existing skills.
+- Plugin description and keywords expanded with `design-md`, `design-system`, `design-tokens`, `design-spec`, and `brand-spec` for better discoverability.
+
+---
+
 ## [1.1.0] - 2026-05-05
 
 ### Added
@@ -81,5 +94,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Source canon mapping every quote and framing back to *Build* chapters, podcasts, and posts
 - Sidecar template with composite score, per-pillar diagnoses, and copy-pasteable rewrites of weak sections
 
+### designmd-ripper
+
+#### v1.0 (Current)
+- Playwright-based extraction of computed-style design tokens (colors, typography, spacing, shadows, radii, motion) from any public URL
+- Spec-correct synthesis to Google DESIGN.md: YAML frontmatter tokens plus body-section rationale prose
+- 5 reference files: full canonical spec (`spec.md`), synthesis guide with 12-item strictness checklist, all 8 lint rules with trigger conditions, the official "Atmospheric Glass" canonical example, and `@google/design.md` CLI reference
+- 3 scripts: `extract.py` (Playwright extraction pipeline), `render_brief.py` (raw signals to DESIGN.md synthesis), `lint.sh` (validation against canonical linter for 0 errors, 0 warnings)
+- Output portable to Stitch, Tailwind theme generators, and Figma importers
+- Skill metadata: `model: opus`, `context: fork`, `effort: max`
+
+[1.2.0]: https://github.com/byosamah/ok-skills/releases/tag/v1.2.0
 [1.1.0]: https://github.com/byosamah/ok-skills/releases/tag/v1.1.0
 [1.0.0]: https://github.com/byosamah/ok-skills/releases/tag/v1.0.0
