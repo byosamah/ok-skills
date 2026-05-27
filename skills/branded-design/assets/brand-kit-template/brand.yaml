@@ -1,0 +1,21 @@
+# Brand Post Configuration
+# Fill in your brand details below
+
+# Required fields
+name: "Your Brand Name"
+tone: "Professional, modern, bold"  # Describe your brand's voice/personality
+colors:
+  primary: "#000000"      # Main brand color
+  secondary: "#333333"    # Secondary brand color
+  accent: "#FF0000"       # Accent/highlight color
+  background: "#FFFFFF"   # Default background color
+  text: "#000000"         # Default text color
+style_keywords: "minimalist, clean"  # Comma-separated visual style descriptors
+
+# Optional fields
+tagline: "Your brand tagline here"
+fonts:
+  heading: "Font Name Bold"    # Maps to fonts/heading.otf or .ttf
+  body: "Font Name Regular"    # Maps to fonts/body.otf or .ttf
+font_strategy: "reference"     # "reference" (default) or "exact" (uses font_to_image.py)
+logo_placement: "bottom-right" # Where to place the logo: bottom-right, bottom-left, top-right, top-left, center

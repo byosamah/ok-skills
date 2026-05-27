@@ -1,7 +1,7 @@
 {
   "name": "ok-skills",
-  "description": "Osama Khalil's skill collection for Claude Code and Codex. Three.js game development, pixel-perfect website cloning, Tony Fadell-style spec review, and Google DESIGN.md design-system extraction from any live website.",
-  "version": "1.2.0",
+  "description": "Osama Khalil's skill collection for Claude Code and Codex. Three.js game development, pixel-perfect website cloning, Tony Fadell-style spec review, Google DESIGN.md design-system extraction from any live website, and on-brand social media post generation.",
+  "version": "1.3.0",
   "author": {
     "name": "Osama Khalil",
     "url": "https://osama.me"
@@ -27,6 +27,10 @@
     "design-system",
     "design-tokens",
     "design-spec",
-    "brand-spec"
+    "brand-spec",
+    "social-media",
+    "instagram",
+    "brand-design",
+    "compositing"
   ]
 }

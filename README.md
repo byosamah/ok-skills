@@ -2,7 +2,7 @@
 
 A curated collection of production-ready skills for [Claude Code](https://claude.ai/code) and [Codex](https://openai.com/index/introducing-codex/) by [Osama Khalil](https://osama.me).
 
-OK-Skills gives your AI coding assistant deep expertise in **Three.js game development**, **pixel-perfect website cloning**, **Tony Fadell-style product spec review**, and **Google DESIGN.md design-system extraction from any live website**. Each skill is a self-contained knowledge base with guides, reference documentation, and (where applicable) executable scripts that the AI reads and follows to produce expert-level output.
+OK-Skills gives your AI coding assistant deep expertise in **Three.js game development**, **pixel-perfect website cloning**, **Tony Fadell-style product spec review**, **Google DESIGN.md design-system extraction from any live website**, and **on-brand social media post generation**. Each skill is a self-contained knowledge base with guides, reference documentation, and (where applicable) executable scripts that the AI reads and follows to produce expert-level output.
 
 ---
 
@@ -314,16 +314,97 @@ When you invoke `/designmd-ripper` with a URL, your AI extracts the site's desig
 
 ---
 
+### 🖼️ branded-design
+
+**Generate on-brand social media posts with pixel-perfect brand fidelity.** Most AI image generators redraw your logo, invent your fonts, and approximate your brand elements. `branded-design` refuses to. It uses a two-step compositing pipeline: Nano Banana generates the base visual (a photo, illustration, or scene with no brand assets baked in), then a Pillow pipeline layers your *real* assets on top: actual logo PNGs, actual font TTF rendering, actual decorative element files. The output matches your brand because it literally uses your brand files.
+
+#### What It Does
+
+When you invoke `/branded-design`, your AI assistant turns the skill folder itself into a brand template. On first run it interviews you about your brand (name, colors, fonts, archetype, cultural rules, logo placement), bootstraps a `brand-kit/` directory, and calibrates layout proportions from your existing example posts. On every run after that, it generates a base visual, composites your real assets with calibrated positioning, then logs your feedback so the next post lands closer to your taste.
+
+**The skill folder IS the brand.** Copy the skill, fill in your `brand-kit/`, optionally rename it to `{your-brand}-brain`, and you have a custom post generator scoped to one brand.
+
+#### Brand Archetypes
+
+Not every brand composites the same way. During setup the skill picks the archetype that fits, and the pipeline adapts:
+
+| Archetype | Base Visual | Compositing |
+|-----------|------------|-------------|
+| `photo-person` | AI photo of a person on a solid background | Full z-ordering: elements bleed behind the person (background removed via rembg), logo and text on top |
+| `photo-product` | AI product shot | Product on background, decorative elements plus logo and text layered on top (no background removal) |
+| `illustration` | AI-generated illustration | Logo and text overlaid on the full-canvas illustration |
+| `text-card` | None (no AI call) | Pillow renders everything: background, text blocks, logo, elements |
+| `editorial` | Full-bleed AI scene | Contrast treatment (overlay, gradient, or bottom bar) plus light text and logo |
+| `minimal` | Clean subject on a neutral background | Small subject, subtle logo, text, generous whitespace |
+
+#### What's Inside
+
+**Main Guide (SKILL.md)** covers:
+- The two-step compositing philosophy (why AI-baked assets are not good enough for production brands)
+- Six brand archetypes and how each one changes the pipeline
+- First-run detection and an 8-step Setup Mode (dependency install, brand interview, config creation, font setup, asset placement, calibration from examples, validation, optional rename)
+- The generation workflow (collect input, read config, generate base, composite real assets, iterate)
+- A per-archetype layer stack plus calibration constants
+- Latin and Arabic/RTL text rendering (with reshaping and bidi reordering)
+- Deep Review Mode for refining calibration and learnings over time
+
+**3 Reference Files:**
+
+| Reference | What It Covers |
+|-----------|---------------|
+| `brand-yaml-schema.md` | Complete specification for `brand-kit/brand.yaml`: the required and optional fields that drive every generation |
+| `prompt-patterns.md` | Optimized base-visual prompt templates per archetype, with `{variable}` placeholders filled from brand config and user input |
+| `platform-formats.md` | Platform specs (aspect ratios, resolutions, considerations) for Instagram, LinkedIn, stories, and more |
+
+**5 Scripts:**
+
+- `setup_brand.py`: Creates `brand.yaml` and the `brand-kit/` directory structure from interview answers. Optionally renames the skill to `{brand-name}-brain`.
+- `validate_brand_kit.py`: Verifies a `brand-kit/` is complete and ready (config fields, logo files, font TTFs, example posts, archetype-specific assets).
+- `generate_post.py`: The core generator. Reads `brand.yaml`, selects reference assets, builds the prompt, and calls the Nano Banana backend to produce the base visual.
+- `composite_post.py`: The compositing pipeline. Layers the real logo, text (rendered from the real font TTF), and decorative elements onto the base image with calibrated proportions.
+- `log_and_learn.py`: Logs generation metadata and extracts reusable rules from iteration feedback so future posts improve.
+
+**1 Asset:**
+
+- `assets/brand-kit-template/`: A scaffold showing the expected `brand-kit/` layout (logo, fonts, examples, photography, characters, icons, moodboard, guidelines) plus a starter `brand.yaml`.
+
+#### Usage
+
+```
+/branded-design
+```
+
+**Example prompts after invoking:**
+- "Set up branded-design for my brand" (runs the first-run interview and calibration)
+- "Make an Instagram post announcing our new feature"
+- "Create a LinkedIn cover about our Q3 results"
+- "Design a quote card in our brand style for a story"
+
+#### Requirements
+
+| Requirement | Details |
+|------------|---------|
+| Python 3.12+ | For all five scripts |
+| Pillow | Required. The compositing engine (`pip3 install Pillow`) |
+| Nano Banana backend | Required for every archetype except `text-card`. A separate image-generation script (where your `GEMINI_API_KEY` lives), resolved via the `NANO_BANANA_SCRIPT` environment variable. `text-card` runs with no backend at all. |
+| `arabic-reshaper` + `python-bidi` | *Optional*. For Arabic or other RTL text rendering |
+| `rembg` | *Optional*. For `photo-person` background removal (elements-behind-subject z-ordering) |
+| Your brand assets | Real logo PNGs, font TTFs, and (where used) decorative element PNGs placed in `brand-kit/` |
+
+---
+
 ## Requirements Overview
 
-| Requirement | threejs-master | cloning | tony-fadell | designmd-ripper |
-|------------|:-:|:-:|:-:|:-:|
-| Claude Code or Codex | ✅ | ✅ | ✅ | ✅ |
-| API Keys | (none) | `GEMINI_API_KEY` | (none) | (none) |
-| Python 3.12+ | (none) | ✅ | (none) | ✅ |
-| Node.js | (none) | ✅ | (none) | Optional |
-| Playwright | (none) | ✅ | (none) | ✅ |
-| ImageMagick | (none) | Optional | (none) | (none) |
+| Requirement | threejs-master | cloning | tony-fadell | designmd-ripper | branded-design |
+|------------|:-:|:-:|:-:|:-:|:-:|
+| Claude Code or Codex | ✅ | ✅ | ✅ | ✅ | ✅ |
+| API Keys | (none) | `GEMINI_API_KEY` | (none) | (none) | via Nano Banana backend |
+| Python 3.12+ | (none) | ✅ | (none) | ✅ | ✅ |
+| Node.js | (none) | ✅ | (none) | Optional | (none) |
+| Playwright | (none) | ✅ | (none) | ✅ | (none) |
+| ImageMagick | (none) | Optional | (none) | (none) | (none) |
+| Pillow | (none) | (none) | (none) | (none) | ✅ |
+| Nano Banana backend | (none) | (none) | (none) | (none) | ✅ (non `text-card`) |
 
 ---
 
@@ -339,7 +420,7 @@ claude plugins install --from github:byosamah/ok-skills
 claude plugins install --from github:byosamah/ok-skills --scope project
 ```
 
-After installation, skills appear in your skill list. Invoke them by name (`/threejs-master`, `/cloning`, `/tony-fadell`, `/designmd-ripper`) or let Claude auto-detect when they're relevant to your task.
+After installation, skills appear in your skill list. Invoke them by name (`/threejs-master`, `/cloning`, `/tony-fadell`, `/designmd-ripper`, `/branded-design`) or let Claude auto-detect when they're relevant to your task.
 
 ---
 

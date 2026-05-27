@@ -4,6 +4,20 @@ All notable changes to OK-Skills will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-05-27
+
+### Added
+
+- **branded-design v1.0**. Generate on-brand social media posts with a two-step compositing pipeline: Nano Banana produces the base visual (a photo, illustration, or scene with no brand assets baked in), then a Pillow pipeline layers the real brand assets on top (actual logo PNGs, real font TTF rendering, real decorative element files) for pixel-perfect fidelity that AI-baked assets cannot match. Adapts to six brand archetypes (photo-person, photo-product, illustration, text-card, editorial, minimal), each with its own layer stack. Includes a first-run brand interview, calibration from example posts, Latin and Arabic/RTL text rendering, and a self-improving learning loop. Ships 3 reference files (brand.yaml schema, per-archetype prompt patterns, platform formats), 5 scripts (`setup_brand.py`, `validate_brand_kit.py`, `generate_post.py`, `composite_post.py`, `log_and_learn.py`), and a `brand-kit-template/` asset scaffold.
+
+### Changed
+
+- README tagline, intro, Requirements Overview table, and invoke list updated to include on-brand social media post generation.
+- Plugin description and keywords expanded with `social-media`, `instagram`, `brand-design`, and `compositing` for discoverability.
+- `package.json` version aligned to `1.3.0` (it had drifted to `1.1.0`).
+
+---
+
 ## [1.2.0] - 2026-05-17
 
 ### Added
@@ -104,6 +118,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Output portable to Stitch, Tailwind theme generators, and Figma importers
 - Skill metadata: `model: opus`, `context: fork`, `effort: max`
 
+### branded-design
+
+#### v1.0 (Current)
+- Two-step compositing pipeline: Nano Banana base visual plus Pillow compositing of real brand assets (logo PNGs, font TTFs, decorative element PNGs)
+- Six brand archetypes with per-archetype pipelines: photo-person (rembg z-ordering, elements bleed behind the subject), photo-product, illustration, text-card (no AI call, fully Pillow-rendered), editorial (contrast treatment over a full-bleed photo), minimal
+- First-run Setup Mode: brand interview, `brand.yaml` creation, font setup, asset-placement guidance, calibration from example posts, validation, optional rename to `{brand-name}-brain`
+- Calibration constants plus per-brand `calibration.yaml` for pixel-accurate logo, text, and element positioning
+- Latin and Arabic/RTL text rendering (`arabic-reshaper` plus `python-bidi` reordering)
+- Self-improving learning loop via `log_and_learn.py` and Deep Review Mode
+- Nano Banana image backend resolved via the `NANO_BANANA_SCRIPT` environment variable (the `text-card` archetype needs no backend)
+
+[1.3.0]: https://github.com/byosamah/ok-skills/releases/tag/v1.3.0
 [1.2.0]: https://github.com/byosamah/ok-skills/releases/tag/v1.2.0
 [1.1.0]: https://github.com/byosamah/ok-skills/releases/tag/v1.1.0
 [1.0.0]: https://github.com/byosamah/ok-skills/releases/tag/v1.0.0
