@@ -65,7 +65,7 @@ The extraction pipeline (Phase 6) captures WHAT animations exist. This matrix de
 | Animation Need | Tool | Why This Tool |
 |---------------|------|---------------|
 | UI enter/exit/layout transitions | Framer Motion (`AnimatePresence`, `motion.div`) | React-aware, handles component mount/unmount gracefully |
-| Scroll-triggered reveals (fade in, slide up) | CSS `@keyframes` + `IntersectionObserver` | Zero-dependency, browser-optimized, no React 18 Strict Mode issues |
+| Scroll-triggered reveals (fade in, slide up) | CSS `@keyframes` + `IntersectionObserver` | Zero-dependency, browser-optimized, no React Strict Mode (18+) issues |
 | Scroll storytelling with scrub (parallax tied to scroll position) | GSAP `ScrollTrigger` with `scrub: true` | Only library with true frame-accurate scroll-position binding |
 | Pinned sections (content changes while section stays fixed) | GSAP `ScrollTrigger` with `pin: true` | Only library with reliable scroll pinning that handles resize |
 | Hover/focus micro-interactions | CSS `:hover` and `:focus` transitions | Zero JavaScript overhead, GPU-composited by default |
@@ -87,7 +87,7 @@ The extraction pipeline (Phase 6) captures WHAT animations exist. This matrix de
 
 ### Why CSS @keyframes is the Default
 
-GSAP + React 18 Strict Mode is a known pain point. In development mode, `useLayoutEffect` runs twice, leaving elements stuck at partial opacity or mid-transform. CSS `@keyframes` animations are completely immune to this because they run in the browser's compositor thread, outside React's lifecycle.
+GSAP + React Strict Mode (React 18+, including 19) is a known pain point. In development mode, `useLayoutEffect` runs twice, leaving elements stuck at partial opacity or mid-transform. CSS `@keyframes` animations are completely immune to this because they run in the browser's compositor thread, outside React's lifecycle.
 
 **Rule of thumb:** Only reach for GSAP when the animation REQUIRES scroll-position binding (`scrub`) or viewport pinning (`pin`). For everything else, CSS is simpler, faster, and more reliable.
 

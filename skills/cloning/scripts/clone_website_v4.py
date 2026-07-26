@@ -26,7 +26,7 @@ The workflow:
 8. HTML: Clean source extraction
 9. HOVER STATES: Exact CSS changes on hover
 10. GEMINI: Send all data with v4 prompt template
-11. OUTPUT: Generate Next.js 14 + Tailwind project
+11. OUTPUT: Generate latest-stable Next.js + Tailwind project
 
 Usage (reference only - normally Claude does this interactively):
     python3 clone_website_v4.py https://example.com ./output-folder
@@ -242,7 +242,7 @@ Using gemini_api_v4.py with:
 
 STEP 14: OUTPUT
 ---------------
-Generate Next.js 14 + Tailwind project:
+Generate latest-stable Next.js + Tailwind project:
 - app/page.tsx, layout.tsx, globals.css
 - components/*.tsx
 - tailwind.config.ts

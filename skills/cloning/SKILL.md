@@ -14,9 +14,12 @@ context: fork
 effort: max
 ---
 
-# Website Cloning Skill v6.0
+# Website Cloning Skill v6.1
 
 Clone any website with **100% fidelity**. Not 90%. Not "close enough." 100%.
+
+> **v6.1**: Clones now always build on the latest stable Next.js + React, pinned from
+> the live npm registry at clone time (see [Framework Versions: Always Latest](#framework-versions-always-latest)).
 
 **THE GOAL IS ALWAYS 100%.** Generate the first draft with Gemini, then push relentlessly — comparing every section, fixing every difference, iterating until the clone is indistinguishable from the original. The skill is not done when the code compiles. It's done when a human cannot tell which is the original and which is the clone.
 
@@ -95,6 +98,15 @@ The `gemini_api_v4.py` script automatically:
 - Sends to Gemini 3.1 Pro with optimal parameters
 
 Then run mandatory post-processing:
+- **Pin the latest Next.js + React** (do this FIRST, before `npm install`):
+  ```bash
+  python scripts/pin_latest_versions.py ~/Desktop/{site}-clone
+  ```
+  This queries the live npm registry and rewrites `package.json` so `next`, `react`,
+  `react-dom` (plus `eslint-config-next` and the React `@types`) are the newest stable
+  release. Gemini's training data is always months stale (it defaults to Next 14 /
+  React 18), so without this step every clone ships two majors behind. See
+  [Framework Versions: Always Latest](#framework-versions-always-latest).
 - Deploy downloaded assets to `public/images/`
 - Self-host fonts in `public/fonts/` (rewrite @font-face)
 - Enforce measurements against extracted data
@@ -108,6 +120,9 @@ This is where fidelity goes from 80% to 100%. The Gemini output is a FIRST DRAFT
 ```bash
 cd ~/Desktop/{site}-clone && npm install && npm run dev
 ```
+> If you skipped straight to Refine Mode on an older clone, run
+> `python scripts/pin_latest_versions.py <clone-dir>` before `npm install` so the
+> clone is rebuilt on the latest Next.js + React, not whatever it was frozen at.
 
 **3b. Missing section audit (FIRST — before any detail work):**
 
@@ -195,6 +210,40 @@ Pass 3: Fix micro differences (shadows, borders, font weights, hover states)
 
 **3h. After visual loop exits, run code quality gate:**
 Phase 9.5 automated checks (TypeScript compilation, no placeholders, etc.)
+
+---
+
+## Framework Versions: Always Latest
+
+Every clone must be born on the **latest stable Next.js + React**, resolved at clone
+time, never a version frozen into a model's training data.
+
+**Why this is non-negotiable:** the code generator can only emit version numbers it saw
+during training, and those go stale within weeks. Left alone, Gemini scaffolds Next 14 /
+React 18 while the registry has already moved on (Next 16 / React 19 and climbing). A
+fresh clone that boots two majors behind inherits old defaults, missing APIs, and
+security patches it will never get. "Latest available" is a moving target, so the only
+correct source of truth is the live npm registry, queried the moment the clone is built.
+
+**Mechanism:** `scripts/pin_latest_versions.py` runs as the first post-generation step.
+It calls `npm view <pkg> version` for `next`, `react`, `react-dom`, `eslint-config-next`,
+and the React `@types`, then rewrites `package.json` with those exact versions before
+`npm install` ever runs.
+
+- **Compatibility is guaranteed by construction.** `next`, `react`, and `react-dom` are
+  all resolved to their `latest` dist-tag in the same pass, and npm's latest Next is
+  released against the latest stable React. `react` and `react-dom` are forced equal.
+- **Only the framework moves.** Tailwind, TypeScript, PostCSS, and animation libraries
+  (`gsap`, `framer-motion`) are deliberately left as-is. Bumping Tailwind v3 -> v4, for
+  example, would break the generated CSS config. Freshening the framework is a different
+  job from rewriting the styling engine.
+- **No fallbacks.** If npm or the network is unreachable, the script exits non-zero with a
+  clear message and writes nothing, rather than silently pinning a stale default. A
+  visibly failed pin is safer than an invisibly outdated one.
+- **Breaking changes are absorbed downstream.** Latest Next/React can introduce breaks
+  (async `params`/`searchParams`, React 19 ref semantics). The Phase 9.5 `npx tsc --noEmit`
+  hard gate catches them and the self-healing visual loop fixes them. That safety net is
+  why targeting latest is safe, not reckless.
 
 ---
 

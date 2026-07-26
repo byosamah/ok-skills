@@ -122,7 +122,26 @@ class CloneOrchestrator:
             await page.set_viewport_size({"width": vp["width"], "height": vp["height"]})
             await page.wait_for_timeout(500)
             path = self.output_dir / "screenshots" / f"{vp['name']}-full.png"
-            await page.screenshot(path=str(path), full_page=True)
+            try:
+                await page.screenshot(path=str(path), full_page=True)
+            except Exception as e:
+                # Very tall pages exceed Chrome's max screenshot texture height
+                # (~16384px). Don't let one viewport kill the whole pipeline.
+                print(f"       {vp['name']}: full-page failed ({e}); trying capped clip...")
+                try:
+                    scroll_h = await page.evaluate("document.body.scrollHeight")
+                    capped = min(int(scroll_h), 16000)
+                    await page.screenshot(
+                        path=str(path),
+                        clip={"x": 0, "y": 0, "width": vp["width"], "height": capped},
+                    )
+                except Exception as e2:
+                    print(f"       {vp['name']}: capped clip failed ({e2}); viewport-only...")
+                    try:
+                        await page.screenshot(path=str(path), full_page=False)
+                    except Exception as e3:
+                        print(f"       {vp['name']}: SKIPPED (all attempts failed: {e3})")
+                        continue
             size_kb = path.stat().st_size / 1024
             print(f"       {vp['name']} ({vp['width']}x{vp['height']}): {size_kb:.0f}KB")
 

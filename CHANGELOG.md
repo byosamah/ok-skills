@@ -4,6 +4,21 @@ All notable changes to OK-Skills will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-07-26
+
+### Added
+
+- **`cloning` v6.1: clones are always born on the latest stable Next.js + React.** New `scripts/pin_latest_versions.py` queries the live npm registry for `next`, `react`, `react-dom`, `eslint-config-next`, and the React `@types`, then rewrites the generated `package.json` before `npm install` ever runs. A code generator can only emit version numbers it saw during training, so Gemini scaffolds Next 14 / React 18 while the registry has moved on. Every clone was shipping two majors behind, inheriting old defaults, missing APIs, and security patches it would never get. The script runs as the first post-generation step, and Refine Mode on an older clone can run it standalone before rebuilding.
+
+### Changed
+
+- **`cloning` now defaults to CSS `@keyframes` instead of GSAP** for fade, slide, and stagger reveals. GSAP under React Strict Mode (18+, including 19) double-invokes `useLayoutEffect` in development, leaving elements stuck at partial opacity or mid-transform. CSS keyframes run on the browser's compositor thread, outside React's lifecycle, so they are immune. GSAP is now reserved for what it is actually needed for: scroll-linked scrub and pinned sections. Applied across `references/extraction-phases.md`, `references/implementation-quality.md`, and `references/gemini-prompt-template-v4.md`.
+- **`cloning` survives very tall pages.** `scripts/clone_orchestrator.py` catches Chrome's ~16384px maximum screenshot texture height and falls back to a capped clip, instead of letting one oversized viewport kill the entire capture pipeline.
+- **`cloning` codegen prompt no longer hardcodes framework versions.** `scripts/gemini_api_v4.py` instructs the model to emit `"latest"` for `next`, `react`, and `react-dom` and leave exact pinning to the post-processing step, so the model's job is the code and not the version numbers.
+- `package.json` and `.claude-plugin/plugin.json` bumped to `1.3.1` together, keeping the two version strings in sync.
+
+---
+
 ## [1.3.0] - 2026-05-27
 
 ### Added

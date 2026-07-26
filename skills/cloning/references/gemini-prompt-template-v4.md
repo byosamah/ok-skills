@@ -232,7 +232,7 @@ Do NOT mix arbitrary values like 75ms, 250ms, 450ms when choosing durations.
 ## REQUIREMENTS
 - Exact specifications for the clone
 - FONT SELF-HOSTING: Download all .woff2 files from font manifest to public/fonts/. Use local paths in @font-face (e.g., /fonts/SanaSans-Variable.woff2). NEVER use external font URLs — CORS blocks them.
-- ANIMATION RULE: Default to CSS @keyframes for fade/slide/stagger. Only use GSAP if site has scroll-linked scrub or pinned sections. GSAP + React 18 Strict Mode breaks animations.
+- ANIMATION RULE: Default to CSS @keyframes for fade/slide/stagger. Only use GSAP if site has scroll-linked scrub or pinned sections. GSAP + React Strict Mode (18+) breaks animations.
 - MEASUREMENTS: Use exact values from COMPUTED MEASUREMENTS section for Tailwind classes (h-[52px], max-w-[1496px], etc.)
 - HTML CONTENT: Use exact innerHTML from HTML CONTENT section — preserve <br> tags, image CDN URLs, link hrefs.
 - CODE QUALITY: Output must pass Phase 9.5 quality gate — no placeholder URLs, no emoji placeholders, all referenced images must exist as local files, no mixed GSAP+Framer imports per component.

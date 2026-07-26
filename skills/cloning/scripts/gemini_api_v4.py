@@ -101,7 +101,10 @@ REQUEST_TIMEOUT = 600  # 10 minutes for complex sites
 CLONE_PROMPT_TEMPLATE_V4 = """# CLONE REQUEST: {url}
 
 You are cloning a website with 100% visual fidelity.
-Generate complete, production-ready Next.js 14 + Tailwind CSS code.
+Generate complete, production-ready code for the LATEST stable Next.js (App Router) + Tailwind CSS.
+Do NOT hardcode framework versions from memory. In package.json use "next": "latest",
+"react": "latest", and "react-dom": "latest". A post-processing step pins these to the exact
+newest stable release from the live npm registry, so your job is the code, not the version numbers.
 
 ## SITE ANALYSIS (Pre-computed)
 
@@ -207,7 +210,7 @@ Create these SEPARATE component files (do NOT combine):
 - app/globals.css (global styles, @font-face, @keyframes)
 {component_files}
 - tailwind.config.ts (custom colors, fonts)
-- package.json (dependencies including {animation_library} if used)
+- package.json (next/react/react-dom pinned to "latest"; add {animation_library} if used)
 
 ## ANIMATION IMPLEMENTATION
 
@@ -870,6 +873,31 @@ def send_to_gemini_v4(
                     full_path.parent.mkdir(parents=True, exist_ok=True)
                     full_path.write_text(content)
                     print(f"  Created: {full_path}")
+
+                # Lock next/react/react-dom to the latest stable release from the
+                # live npm registry. Gemini emits "latest" placeholders; this pins
+                # them to concrete versions and aligns @types / eslint-config-next.
+                try:
+                    import sys
+                    sys.path.insert(0, str(Path(__file__).resolve().parent))
+                    from pin_latest_versions import pin_package_json
+
+                    report = pin_package_json(output_dir)
+                    if report:
+                        print("  Pinned to latest stable framework versions:")
+                        for field, (old, new) in report.items():
+                            print(f"    {field}: {old} -> {new}")
+                    else:
+                        print("  package.json already on latest stable versions.")
+                except Exception as pin_error:
+                    # Warn and continue rather than abort. A pin failure (e.g. npm
+                    # offline) is not worth discarding a successful, expensive Gemini
+                    # generation: Gemini already wrote "next": "latest" placeholders,
+                    # so `npm install` still resolves to the newest release. The lock
+                    # is a nice-to-have on top of that guarantee, not a gate.
+                    print(f"  WARNING: could not pin latest versions ({pin_error}).")
+                    print('  package.json keeps its "latest" placeholders; '
+                          "run scripts/pin_latest_versions.py once npm is reachable.")
 
             return {
                 "success": True,

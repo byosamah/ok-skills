@@ -740,7 +740,7 @@ Group animations into implementation categories:
 - Complex timeline sequencing with callbacks
 - 10+ coordinated animations with specific easing curves
 
-**Why:** GSAP + React 18 Strict Mode breaks animations. `useLayoutEffect` runs twice in dev mode, leaving elements stuck at partial opacity. CSS `@keyframes` are immune to this.
+**Why:** GSAP + React Strict Mode (18+) breaks animations. `useLayoutEffect` runs twice in dev mode, leaving elements stuck at partial opacity. CSS `@keyframes` are immune to this.
 
 ### 6.7 Fallback (ONLY after runtime recorder has been attempted)
 
