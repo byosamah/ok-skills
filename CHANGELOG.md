@@ -4,6 +4,20 @@ All notable changes to OK-Skills will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-08-09
+
+### Added
+
+- **gauntlet-loop v1.0**. An implementation of [Matt Shumer's Gauntlet Loop](https://somethingbig.ai/gauntlet-loop), the prompting method behind Claude of Duty. Turns "build me X" into a run that keeps improving against a reference it can lose to, instead of stopping at the first decent result. Two-phase by design: it interviews for a goal and a real quality bar, captures that bar as inspectable files on disk, and writes a short Shumer-style prompt, then hands off to a **clean-room** Claude Code session where a lead agent splits the goal into the smallest independently judgeable pieces and pairs each with a builder and a separate harsh critic doing blind A/B against the bar. Ships 3 reference files (`bar-catalog.md` for sourcing a real bar across seven domains, `prompt-patterns.md` with the original prompt plus worked adaptations, `clean-room.md` for launch mechanics and troubleshooting) and 1 script (`launch-gauntlet.sh`).
+- **Clean-room launch.** The launcher starts the run with zero MCP servers, zero skills, and no global `CLAUDE.md`, while leaving subagents, workflows, shell, file access, and web access intact. This is not in the source article: it follows from the article's first rule, since every installed skill and MCP server is a route already chosen for the agent, and persona rules in a global `CLAUDE.md` propagate into every spawned critic. The flag combination was verified empirically against Claude Code 2.1.226.
+
+### Changed
+
+- README intro, Requirements Overview table, and invoke list updated to include the Gauntlet Loop.
+- Plugin and marketplace descriptions extended, with `gauntlet-loop`, `gauntlet`, `multi-agent`, `subagents`, `agent-orchestration`, `prompting`, and `quality-loop` added to keywords for discoverability.
+
+---
+
 ## [1.3.1] - 2026-07-26
 
 ### Added

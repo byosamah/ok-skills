@@ -2,7 +2,7 @@
 
 A curated collection of production-ready skills for [Claude Code](https://claude.ai/code) and [Codex](https://openai.com/index/introducing-codex/) by [Osama Khalil](https://osama.me).
 
-OK-Skills gives your AI coding assistant deep expertise in **Three.js game development**, **pixel-perfect website cloning**, **Tony Fadell-style product spec review**, **Google DESIGN.md design-system extraction from any live website**, and **on-brand social media post generation**. Each skill is a self-contained knowledge base with guides, reference documentation, and (where applicable) executable scripts that the AI reads and follows to produce expert-level output.
+OK-Skills gives your AI coding assistant deep expertise in **Three.js game development**, **pixel-perfect website cloning**, **Tony Fadell-style product spec review**, **Google DESIGN.md design-system extraction from any live website**, **on-brand social media post generation**, and **Gauntlet Loop runs that keep building until the work beats a real quality bar**. Each skill is a self-contained knowledge base with guides, reference documentation, and (where applicable) executable scripts that the AI reads and follows to produce expert-level output.
 
 ---
 
@@ -393,18 +393,75 @@ Not every brand composites the same way. During setup the skill picks the archet
 
 ---
 
+### ⚔️ gauntlet-loop
+
+**Build to a bar you cannot talk your way around.** An implementation of [Matt Shumer's Gauntlet Loop](https://somethingbig.ai/gauntlet-loop), the prompting method behind [Claude of Duty](https://github.com/mshumer/Claude-of-Duty): one prompt, many hours, roughly 55,000 lines, every texture and sound generated from scratch, no human steering. A model stops when nothing tells it that it isn't done, so "make it amazing" reliably produces one decent result and a bow. Hand it real Call of Duty screenshots plus an independent critic whose only job is to say "the reference won, here is the gap", and it can no longer declare victory.
+
+#### What It Does
+
+When you invoke `/gauntlet-loop` and describe something you want built, your AI runs the method end to end. It asks four questions, none of them about implementation. It finds what "great" actually looks like for your domain and saves it as real files on disk. It writes a short Shumer-style prompt. Then it hands you one command that launches a **clean-room** session where a lead agent splits the goal into the smallest independently judgeable pieces, pairs each with a builder and a separate harsh critic, and loops on blind A/B against the bar until you stop it.
+
+#### The Clean Room
+
+This part is not in the original article. It follows from the article's first rule, "give it the goal, not your implementation": every installed skill and MCP server in scope is a route already chosen for the agent, and persona or style rules in a global `CLAUDE.md` leak into every critic that gets spawned. A critic told to be entertaining is not a harsh critic.
+
+The bundled launcher starts the run with **zero MCP servers, zero skills, and no global `CLAUDE.md`**, while leaving subagents, workflows, shell, file access, and web access fully intact. None of this can be stripped from a session already running, which is why the skill is two-phase: interview and capture the bar in your normal session, then hand off.
+
+#### What's Inside
+
+**Main Guide (SKILL.md)** covers:
+- Why the method works, and the one instinct that kills it (writing a spec)
+- The route/method split: architecture and decomposition belong to the model, the bar and the builder-critic separation belong to you
+- Six phases: frame the goal, interview, materialize the bar, write the prompt, hand off, watch without interrupting
+
+**3 Reference Files:**
+
+| Reference | What It Covers |
+|-----------|---------------|
+| `bar-catalog.md` | How to source and capture a real, inspectable bar in seven domains (visual and 3D, web and product UI, writing, backend and systems, marketing, research, audio and video), what to do when the user has no bar, and the rule that a reference is a yardstick and never source material |
+| `prompt-patterns.md` | Shumer's original prompt verbatim, the fill-in template, three worked adaptations (landing page, backend service, long-form essay), a table of the exact phrases that carry weight and what each one prevents, and the article's own meta-prompt for provenance |
+| `clean-room.md` | Every launch flag and what it does, the command to re-verify isolation after a Claude Code update, what disabling skills costs you, why `--bare` is a trap, permission-mode tradeoffs, and troubleshooting for runs that stop early or produce passing critics |
+
+**1 Script:**
+
+- `launch-gauntlet.sh`: The clean-room launcher. Refuses to start without a prompt file, warns when the reference folder is empty (a bar the critic cannot open is not a bar), and gates `bypassPermissions` behind an explicit confirmation.
+
+#### Usage
+
+```
+/gauntlet-loop
+```
+
+**Example prompts:**
+- "Build a browser-playable kart racer as good as Mario Kart 8"
+- "I want a landing page that holds up next to Linear and Stripe"
+- "Write the launch essay, and it has to read as clearly as Paul Graham"
+- "Build this API and don't stop until p99 is under 40ms under chaos testing"
+
+#### Requirements
+
+| Requirement | Details |
+|------------|---------|
+| Claude Code | Required for the launcher, which uses Claude Code CLI flags. The method itself works in Codex, but you would launch it by hand |
+| Time and compute | Runs are measured in hours, not minutes, at `xhigh` effort with a fleet of subagents. This is the expensive skill in the collection, deliberately |
+| A real reference | Screenshots, a test suite, a benchmark target, reference prose. The skill helps you find one, but a bar written in prose is not a bar |
+
+Dynamic workflows must be enabled once in `/config`, since `ultracode` depends on them.
+
+---
+
 ## Requirements Overview
 
-| Requirement | threejs-master | cloning | tony-fadell | designmd-ripper | branded-design |
-|------------|:-:|:-:|:-:|:-:|:-:|
-| Claude Code or Codex | ✅ | ✅ | ✅ | ✅ | ✅ |
-| API Keys | (none) | `GEMINI_API_KEY` | (none) | (none) | via Nano Banana backend |
-| Python 3.12+ | (none) | ✅ | (none) | ✅ | ✅ |
-| Node.js | (none) | ✅ | (none) | Optional | (none) |
-| Playwright | (none) | ✅ | (none) | ✅ | (none) |
-| ImageMagick | (none) | Optional | (none) | (none) | (none) |
-| Pillow | (none) | (none) | (none) | (none) | ✅ |
-| Nano Banana backend | (none) | (none) | (none) | (none) | ✅ (non `text-card`) |
+| Requirement | threejs-master | cloning | tony-fadell | designmd-ripper | branded-design | gauntlet-loop |
+|------------|:-:|:-:|:-:|:-:|:-:|:-:|
+| Claude Code or Codex | ✅ | ✅ | ✅ | ✅ | ✅ | Claude Code |
+| API Keys | (none) | `GEMINI_API_KEY` | (none) | (none) | via Nano Banana backend | (none) |
+| Python 3.12+ | (none) | ✅ | (none) | ✅ | ✅ | (none) |
+| Node.js | (none) | ✅ | (none) | Optional | (none) | (none) |
+| Playwright | (none) | ✅ | (none) | ✅ | (none) | Optional (bar capture) |
+| ImageMagick | (none) | Optional | (none) | (none) | (none) | (none) |
+| Pillow | (none) | (none) | (none) | (none) | ✅ | (none) |
+| Nano Banana backend | (none) | (none) | (none) | (none) | ✅ (non `text-card`) | (none) |
 
 ---
 
@@ -420,7 +477,7 @@ claude plugins install --from github:byosamah/ok-skills
 claude plugins install --from github:byosamah/ok-skills --scope project
 ```
 
-After installation, skills appear in your skill list. Invoke them by name (`/threejs-master`, `/cloning`, `/tony-fadell`, `/designmd-ripper`, `/branded-design`) or let Claude auto-detect when they're relevant to your task.
+After installation, skills appear in your skill list. Invoke them by name (`/threejs-master`, `/cloning`, `/tony-fadell`, `/designmd-ripper`, `/branded-design`, `/gauntlet-loop`) or let Claude auto-detect when they're relevant to your task.
 
 ---
 
