@@ -2,26 +2,49 @@
 name: cloning
 description: |
   Clone any website to 100% fidelity — not 90%, not "close enough", 100%.
-  Generates with Gemini 3.1 Pro, then pushes relentlessly through a self-healing visual loop
-  until every section, every badge color, every animation, every pixel matches the original.
+  Recovers the site's real animation libraries and exact versions off the wire first
+  (source maps, GSAP/Lenis/Smooothy/Swiper fingerprints, npm version pinning), generates
+  with Gemini 3.1 Pro, then pushes through a self-healing visual loop until every section,
+  every badge color, every easing curve and every pixel matches. Verifies motion at the
+  same animation phase against a measured noise floor, not at a fixed clock time.
   Playwright-only deterministic pipeline. Never stops until the clone is indistinguishable.
-  Use when user says "clone this website", "/cloning [URL]", "perfect clone this design",
+  Use when the user says "clone this website", "/cloning [URL]", "perfect clone this design",
   or wants to replicate any website's visual design. Also use when the user mentions
   "website cloning", "copy this design", "replicate this UI", "match this site exactly",
-  "keep fixing", "push to 100%", or "refine the clone".
+  "rebuild this site", "keep fixing", "push to 100%", or "refine the clone" — and whenever
+  they want a site's animations, scroll effects, carousel physics or page transitions
+  reproduced faithfully rather than approximated.
 model: opus
 context: fork
 effort: max
 ---
 
-# Website Cloning Skill v6.1
+# Website Cloning Skill v6.2
 
 Clone any website with **100% fidelity**. Not 90%. Not "close enough." 100%.
 
-> **v6.1**: Clones now always build on the latest stable Next.js + React, pinned from
-> the live npm registry at clone time (see [Framework Versions: Always Latest](#framework-versions-always-latest)).
+> **v6.2**: Motion is now *recovered* rather than guessed. A new Step 0 pulls the site's
+> real animation libraries and exact versions off the wire before any code is written, and
+> verification compares at the same animation phase against a measured noise floor instead
+> of at a fixed clock time. See [Step 0](#step-0-recover-the-real-motion-source-do-this-first)
+> and [Verifying Motion](#verifying-motion-without-false-failures).
 
 **THE GOAL IS ALWAYS 100%.** Generate the first draft with Gemini, then push relentlessly — comparing every section, fixing every difference, iterating until the clone is indistinguishable from the original. The skill is not done when the code compiles. It's done when a human cannot tell which is the original and which is the clone.
+
+## The governing principle: don't guess what you can read
+
+Video inference is this pipeline's most-used tool and its least reliable one. A recording
+shows you the *result* of an animation. It cannot show you the easing function, the stagger
+interval, the scrub value, or whether a carousel runs on a spring or a tween.
+
+Most sites hand you far better evidence, and it is sitting in the network tab. Before
+inferring any motion, find out how much of the real thing you can simply obtain: the
+original source via source maps, or failing that the exact animation libraries and their
+exact versions. Installing `gsap@3.15.0` reproduces the original's easing curves perfectly
+and costs one command. Approximating those curves by eye never fully converges.
+
+Treat Gemini-from-video as the **fallback for whatever remains unexplained**, not as the
+default path.
 
 **BEHAVIOR RULES:**
 - `effort: max` — ALWAYS Maximum Effort. Never suggest simplifying. Never ask "Option A/B/C."
@@ -64,6 +87,53 @@ If the user provides `--refine` + a directory path → **Refine Mode** (Step 3 o
 If the user says "keep fixing", "push to 100%", "refine the clone" → **Refine Mode** on the most recent clone
 
 **CRITICAL:** When in Refine Mode, NEVER regenerate the codebase from Gemini. Work with the existing code. Compare against original, fix differences, iterate. Regeneration destroys previous fixes.
+
+### Step 0: Recover the real motion source (do this FIRST)
+
+```bash
+python scripts/recover_motion_source.py {url} /tmp/claude/cloning-{timestamp} \
+    --routes "/,{other-routes}"
+```
+
+This captures every JavaScript file the page loads — including chunks that arrive only
+via dynamic `import()`, which never appear as `<script src>` in the initial HTML and are
+frequently where the animation code lives. It then resolves source maps, fingerprints the
+animation libraries, and matches their exact versions on npm.
+
+Read the printed `STRATEGY` line and act on it:
+
+| Strategy | What it means | What to do |
+|---|---|---|
+| `source-maps` | The original unminified source was recovered | Read `motion-source/sources/` and transcribe the real logic. Best possible case. |
+| `install-and-read` | Libraries identified, some with exact versions | Run the printed install commands. Read `motion-source/pretty/` for the choreography the libraries don't supply. |
+| `infer-from-video` | Nothing recoverable | The videos are now justified. Proceed to Steps 1–3 as normal. |
+
+**Install every `high` confidence package before writing animation code.** Deleting a
+library you turned out not to need is easy. Discovering three passes into the refine loop
+that your hand-rolled momentum will never match a real physics library is not.
+
+Detection works on traces a minifier cannot remove: runtime warning strings, public API
+names, DOM attribute hooks like `[data-smooothy]`, and embedded version literals such as
+`.version="3.15.0"`. It deliberately does **not** look for quoted import specifiers,
+because a bundler that inlines a library erases those entirely — which is why naive scans
+report nothing on exactly the sites worth analysing.
+
+Full detail, including the four-rung recovery ladder and what survives minification:
+[motion-forensics.md](references/motion-forensics.md)
+
+### Step 0.5: Decide the target framework
+
+The orchestrator's `detect_frameworks.js` output names what the original was built with.
+Use it.
+
+Porting a site to Next.js when the original is Astro, Svelte or Nuxt means rewriting every
+animation into a different component lifecycle, and lifecycle timing is exactly what makes
+scroll-linked and load-triggered motion feel right. **When Step 0 finds a real animation
+library, prefer scaffolding in the original's framework.** The default Next.js path below
+stays correct for sites with little or no motion, and whenever the user asks for Next.
+
+Match the original's animation stack regardless of framework choice. If it runs GSAP plus
+Lenis, the clone runs GSAP plus Lenis at the same versions.
 
 ### Step 1: Run Orchestrator (automated extraction)
 
@@ -199,6 +269,11 @@ Pass 3: Fix micro differences (shadows, borders, font weights, hover states)
 - All scroll animations fire at the correct positions
 - All hover states match
 - All auto-cycling components cycle with correct timing
+- `compare_motion.py` reports every route matching **within the measured noise floor**
+- `verify_head.py` exits 0 on every route
+
+The noise floor is what turns "keep iterating" into something with an end. Read
+[Verifying Motion](#verifying-motion-without-false-failures) before using it.
 
 **CRITICAL:** The goal is 100%. Not 90%. Not "close enough." 100%.
 - Do NOT declare "done" after just one pass.
@@ -212,6 +287,66 @@ Pass 3: Fix micro differences (shadows, borders, font weights, hover states)
 Phase 9.5 automated checks (TypeScript compilation, no placeholders, etc.)
 
 ---
+
+## Verifying Motion Without False Failures
+
+Two mistakes make motion verification confidently wrong. Both are easy to make.
+
+**Mistake 1: comparing at the same clock time.** Screenshotting both sites "3 seconds
+after load" compares two *different moments in the animation*. Intro timelines usually
+start on an event rather than on page load, and `document.fonts.ready` is the common one.
+Fonts resolve far sooner from localhost than over a network, so the clone is routinely
+further through its timeline than the original at any fixed moment. A perfectly correct
+clone looks broken, and you go hunting for a bug that was never there.
+
+Compare at the same **phase** instead: wait until the page stops changing, then measure.
+
+**Mistake 2: treating every difference as a defect.** Physics-driven motion never settles
+to the same sub-pixel position twice. Inertial carousels, smooth scroll and springs all
+land slightly differently on each load, so a diff always shows differences and a loop that
+chases them never terminates.
+
+Measure the clone against **itself** across two loads first. That disagreement is the noise
+floor, and differences at or below it carry no information about the original.
+
+This is not theoretical. On one real clone a DOM comparison showed 19 of 263 elements
+differing from the original — a convincing-looking defect list. The same clone compared
+against itself differed by 24 of 263. Every apparent defect was smaller than the
+measurement's own variance.
+
+```bash
+python scripts/compare_motion.py --original {url} --clone http://localhost:{port} \
+    --routes "/,{other-routes}"
+```
+
+The script samples the clone twice to establish the noise floor, then reports only
+differences that exceed it. Watch the settle times it prints: seeing the clone settle at
+8785ms while the original settles at 6200ms is normal, and is exactly why fixed waits fail.
+
+A noise floor of zero means the settle logic is working and the comparison is
+deterministic. That is a good result, not a broken one — but confirm the probe actually
+captured elements before believing it.
+
+## Verify the Head, Not Just the Body
+
+Titles, descriptions and social tags are invisible to every visual check in this pipeline.
+Pixel diffs, SSIM scores and DOM geometry comparisons all read the body. A clone can match
+the original exactly on screen while shipping a title the generator invented.
+
+This has happened: a clone shipped a `/lab` page titled "Lab / Coming Soon" where the
+original said "Lab / Experiments", plus an extra sentence bolted onto the description.
+Every screenshot passed. Element-by-element DOM comparison passed. The defect reached
+delivery because nothing ever read the head.
+
+```bash
+python scripts/verify_head.py --original {url} --clone http://localhost:{port} \
+    --routes "/,{all-other-routes}"
+```
+
+Exits non-zero on any wrong or missing value. It separates real defects from the two
+differences a rebuild legitimately causes: the `generator` tag naming your framework
+version, and asset URLs changing when a hashed build path becomes a static one. Confirm
+those asset URLs still resolve before shipping.
 
 ## Framework Versions: Always Latest
 
@@ -264,7 +399,15 @@ These rules are injected into every Gemini prompt. Full details: [implementation
 
 ### Animation Implementation (CRITICAL for fidelity)
 
-**When the orchestrator detects GSAP/ScrollTrigger on the original site, the Gemini prompt MUST demand GSAP implementation — NOT CSS + IntersectionObserver substitutes.** This is the #1 source of fidelity loss.
+**Use the libraries Step 0 identified, at the versions it found.** Substituting CSS plus
+IntersectionObserver for a real animation library is the largest single source of fidelity
+loss, because you are re-deriving easing curves and thresholds that were already available
+to install.
+
+The same rule applies beyond GSAP. If Step 0 reports `smooothy`, install `smooothy` — a
+hand-rolled drag carousel will not reproduce its momentum or its snapping. If it reports
+`lenis`, install `lenis`, because smooth scroll shifts the position of every scroll-linked
+animation on the page and approximating it puts everything slightly out of step.
 
 Ready-to-use GSAP code templates for the 3 most common patterns: [gsap-patterns.md](references/gsap-patterns.md)
 
@@ -305,15 +448,17 @@ After evaluator passes, run automated code checks. Full details: [verification-p
 | 1 | No placeholder URLs | `grep -r "unsplash\|picsum\|placeholder" src/` | Replace with assets |
 | 2 | No emoji placeholders | `grep -rP '[\x{1F300}-\x{1FFFF}]' src/` | Replace with <img> or SVG |
 | 3 | All image assets exist | Verify each `<img src="/images/...">` file | Copy from downloads |
+| 4 | Head matches on every route | `python scripts/verify_head.py --original {url} --clone {local} --routes "..."` | Fix titles/meta; invisible to every visual check |
+| 5 | Motion matches within noise floor | `python scripts/compare_motion.py --original {url} --clone {local} --routes "..."` | Fix only differences exceeding the floor |
 
 ### Soft Gate (warnings in report)
 
 | # | Check | Command | Recommendation |
 |---|-------|---------|----------------|
-| 4 | Animation tool consistency | No dual gsap + framer-motion imports | Refactor per matrix |
-| 5 | prefers-reduced-motion | `grep -r "prefers-reduced-motion" src/` | Add to globals.css |
-| 6 | GPU-only properties | No animate width/height/top/left | Use transform |
-| 7 | Fonts self-hosted | No fonts.googleapis.com | Download to public/fonts/ |
+| 6 | Animation tool consistency | No dual gsap + framer-motion imports | Refactor per matrix |
+| 7 | prefers-reduced-motion | `grep -r "prefers-reduced-motion" src/` | Add to globals.css |
+| 8 | GPU-only properties | No animate width/height/top/left | Use transform |
+| 9 | Fonts self-hosted | No fonts.googleapis.com | Download to public/fonts/ |
 
 ---
 
@@ -326,14 +471,20 @@ After evaluator passes, run automated code checks. Full details: [verification-p
 | Implementation quality rules | [implementation-quality.md](references/implementation-quality.md) | ~2K |
 | Gemini prompt template | [gemini-prompt-template-v4.md](references/gemini-prompt-template-v4.md) | ~2K |
 | GSAP code templates (when GSAP detected) | [gsap-patterns.md](references/gsap-patterns.md) | ~1.5K |
+| Recovering + verifying motion (read at Step 0) | [motion-forensics.md](references/motion-forensics.md) | ~2.5K |
 
 ---
 
 ## Known Limitations
 
-- **WebGL/Three.js:** 3D elements not fully captured
+- **WebGL/Three.js:** 3D elements not fully captured. Step 0 will name the library
+  (`three`, `ogl`, `curtainsjs`) but shader logic still needs manual work.
 - **Custom cursors:** Detected but not always replicated
 - **Sound/Video:** Media files not cloned (only poster images)
+- **Bespoke choreography:** Step 0 recovers libraries and versions, not the site's own
+  hand-written timelines. Those still come from beautified bundles or from the videos.
+- **Console-heavy sites:** some sites log huge base64 payloads (easter eggs, sprite data).
+  Always filter console reads by pattern or the output will blow past tool limits.
 - **Server-side behavior:** Only client-side appearance cloned
 - **Authentication flows:** Login screens captured but not functional
 - **Dynamic content:** Real-time data shows snapshot values

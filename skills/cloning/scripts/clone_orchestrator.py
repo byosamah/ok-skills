@@ -64,6 +64,8 @@ class CloneOrchestrator:
         self.extraction_data = {}
         self.timings = {}
 
+    motion_source = None
+
     def setup_dirs(self):
         """Create output directory structure."""
         dirs = [
@@ -519,6 +521,44 @@ class CloneOrchestrator:
 
     # ── Main Pipeline ───────────────────────────────────────────────
 
+    def recover_motion_source(self):
+        """Phase -1: recover the site's real animation libraries before anything else.
+
+        This runs first because its result changes what the rest of the pipeline is
+        for. If the original's motion comes from a known library at a known version,
+        installing that library reproduces its easing and physics exactly, and the
+        video recordings only need to explain whatever the library does not.
+        """
+        import subprocess as _sp
+
+        script = Path(__file__).parent / "recover_motion_source.py"
+        if not script.exists():
+            print("\n[Phase -1] recover_motion_source.py missing, skipping")
+            return None
+
+        print("\n[Phase -1] Recovering motion source (libraries, versions, source maps)...")
+        try:
+            _sp.run(
+                [sys.executable, str(script), self.url, str(self.output_dir)],
+                timeout=600, check=False,
+            )
+        except Exception as e:
+            print(f"       motion recovery failed: {str(e)[:160]}")
+            return None
+
+        report = self.output_dir / "motion-source" / "motion-source-report.json"
+        if not report.exists():
+            return None
+        try:
+            data = json.loads(report.read_text())
+        except Exception:
+            return None
+
+        self.motion_source = data
+        high = [l for l in data.get("libraries", []) if l.get("confidence") == "high"]
+        print(f"       strategy: {data.get('strategy')}; {len(high)} library(ies) identified")
+        return data
+
     async def run(self):
         """Run the complete extraction pipeline."""
         print(f"{'=' * 50}")
@@ -531,6 +571,10 @@ class CloneOrchestrator:
 
         start = time.time()
         self.setup_dirs()
+
+        # Phase -1 runs before the browser work: what it finds decides
+        # whether the videos are primary evidence or just a fallback.
+        self.recover_motion_source()
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=self.headless)
@@ -591,6 +635,13 @@ class CloneOrchestrator:
         print(f"  Videos:       {video_count}")
         print(f"  Extractions:  {len(self.extraction_data)}")
         print(f"  Assets:       {asset_count}")
+        if self.motion_source:
+            hi = [l for l in self.motion_source.get("libraries", [])
+                  if l.get("confidence") == "high"]
+            print(f"  Motion:       {self.motion_source.get('strategy')}"
+                  f" ({len(hi)} library(ies))")
+            for l in hi:
+                print(f"                  {l['install']}")
         print(f"{'=' * 50}")
 
 

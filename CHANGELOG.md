@@ -4,6 +4,27 @@ All notable changes to OK-Skills will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-09-03
+
+### Added
+
+- **`cloning` v6.2: motion is recovered instead of guessed.** New `scripts/recover_motion_source.py` runs as Phase -1 inside `clone_orchestrator.py`, before any code is written. It saves every JavaScript response the page makes (including chunks that arrive only via dynamic `import()`, which never appear as `<script src>` and are frequently where the animation code lives), resolves source maps into readable originals, fingerprints the animation libraries, and pins their exact versions from npm. A screen recording shows the *result* of an animation but never its easing function, stagger interval or scrub value; installing `gsap@3.15.0` reproduces the original's curves exactly and costs one command.
+- **Fingerprinting that works on real bundles.** Detection deliberately ignores import specifiers, because a bundler that inlines a library erases them: the string `"gsap"` never appears as a quoted module name on the sites most worth analysing. It matches instead on traces a minifier is forced to keep, since the running program compares them against strings: runtime warnings (`gsap.registerPlugin()`), public API names (`ScrollTrigger`, `scrollerProxy`), DOM attribute hooks (`[data-smooothy]`), and embedded version literals (`.version="3.15.0"`). Covers 25 libraries including Smooothy, Swiper, Embla, Lenis, Barba, Rive, Lottie and Matter.js.
+- **`scripts/compare_motion.py`: motion verification that does not produce false failures.** Two fixes. It compares at the same animation *phase* rather than the same clock time, because intro timelines start on events like `document.fonts.ready`, which resolves sooner from localhost than over a network; measured on one real pair, the clone settled at 8785ms and the original at 6200ms, so any fixed wait catches one side mid-animation. And it samples the clone twice to establish an empirical noise floor before comparing anything, because physics-driven motion never settles to the same sub-pixel position twice. On one clone a DOM diff showed 19 of 263 elements differing from the original while the same clone differed from *itself* by 24 of 263: every apparent defect was smaller than the measurement's own variance.
+- **`scripts/verify_head.py`: a hard gate on `<title>` and `<meta>` across every route.** Nothing else in the pipeline can see these. Pixel diffs, SSIM scores and DOM geometry checks all read the body, so a clone can match the original exactly on screen while shipping a title the generator invented. That is what happened: a clone shipped `/lab` titled "Lab / Coming Soon" where the original said "Lab / Experiments", and every visual check passed. Exits non-zero on any wrong or missing value, while separating out the two differences a rebuild legitimately causes.
+- **`references/motion-forensics.md`**: the four-rung recovery ladder (source maps, library identity, beautified bundles, video inference), what survives minification and why, and how to read the noise floor.
+
+### Changed
+
+- **The refinement loop now has a real stop condition.** "Up to 3 passes" was arbitrary. Exit criteria now require every route to match within the clone's own measured run-to-run variance, which is the point past which the measurement can no longer distinguish better from worse.
+- **New Step 0.5 picks the target framework from the original.** Porting an Astro, Svelte or Nuxt site to Next.js means rewriting every animation into a different component lifecycle, and lifecycle timing is exactly what makes scroll-linked motion feel right. When Step 0 finds a real animation library, the clone is now scaffolded in the original's framework. The Next.js default still applies to sites with little motion.
+- **Animation guidance generalised beyond GSAP.** The rule is now to install whatever Step 0 identified at the version it found, rather than to demand GSAP specifically. A hand-rolled drag carousel will not reproduce Smooothy's momentum, and approximated smooth scroll puts every scroll-linked animation slightly out of step.
+- Skill description extended to cover animation, scroll effects, carousel physics and page transitions, so the skill triggers on motion-fidelity requests rather than only on the word "clone".
+- Known Limitations updated: WebGL shader logic still needs manual work, bespoke hand-written choreography is still inferred, and console reads must be filtered by pattern because some sites log multi-megabyte base64 payloads.
+- `package.json` and `.claude-plugin/plugin.json` bumped to `1.5.0` together, keeping the two version strings in sync.
+
+---
+
 ## [1.4.0] - 2026-08-09
 
 ### Added
