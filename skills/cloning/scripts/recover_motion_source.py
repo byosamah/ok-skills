@@ -32,11 +32,12 @@ Output (under <output-dir>/motion-source/):
 
 import argparse
 import asyncio
+import ipaddress
 import json
 import re
+import socket
 import shutil
 import subprocess
-import urllib.request
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
@@ -248,9 +249,6 @@ def safe_map_url(base_url: str, ref: str):
     unchecked it reaches cloud metadata endpoints (169.254.169.254), services
     on the operator's own network, or local files via file://.
     """
-    import ipaddress
-    import socket
-
     try:
         u = urlparse(urljoin(base_url, ref))
     except Exception:
@@ -265,22 +263,61 @@ def safe_map_url(base_url: str, ref: str):
     if not host or host != origin:
         return None
 
+    # Every address the name resolves to must be public. Checking only the first
+    # would let a multi-record answer smuggle an internal address through.
     try:
-        for info in socket.getaddrinfo(host, None):
+        infos = socket.getaddrinfo(host, None)
+        if not infos:
+            return None
+        for info in infos:
             ip = ipaddress.ip_address(info[4][0])
             if (ip.is_private or ip.is_loopback or ip.is_link_local
-                    or ip.is_reserved or ip.is_multicast):
+                    or ip.is_reserved or ip.is_multicast or ip.is_unspecified):
                 return None
+        pinned = infos[0][4][0]
     except Exception:
         return None
-    return u.geturl()
+    # The validated address is returned with the URL so the fetch can connect to
+    # it directly. Handing back only a URL would leave the caller to resolve the
+    # name a second time, and a host whose DNS the attacker controls can answer
+    # public for the check and internal for the fetch.
+    return u.geturl(), pinned
 
 
-class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    """Refuse redirects, so a 302 cannot hop past safe_map_url's checks."""
+def fetch_pinned(url: str, ip: str, timeout: int = 20, max_bytes: int = 25_000_000):
+    """Fetch `url` from the already-validated `ip`, with no second DNS lookup.
 
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None
+    http.client is used rather than urllib because it does not follow redirects,
+    so a 302 cannot send this anywhere the checks did not approve. TLS still
+    validates against the real hostname via SNI, so pinning the address does not
+    weaken certificate checking.
+    """
+    import http.client
+    import ssl
+
+    u = urlparse(url)
+    host = u.hostname
+    port = u.port or (443 if u.scheme == "https" else 80)
+    path = u.path or "/"
+    if u.query:
+        path += "?" + u.query
+
+    sock = socket.create_connection((ip, port), timeout=timeout)
+    try:
+        if u.scheme == "https":
+            sock = ssl.create_default_context().wrap_socket(sock, server_hostname=host)
+        conn = http.client.HTTPConnection(host, port, timeout=timeout)
+        conn.sock = sock
+        conn.request("GET", path, headers={"Host": host, "User-Agent": "clone-motion/1.0"})
+        resp = conn.getresponse()
+        if resp.status != 200:
+            return None
+        return resp.read(max_bytes).decode("utf-8", "replace")
+    finally:
+        try:
+            sock.close()
+        except Exception:
+            pass
 
 
 def resolve_source_maps(outdir, base_url):
@@ -305,9 +342,10 @@ def resolve_source_maps(outdir, base_url):
                 if safe is None:
                     notes.append(f"{bundle.name}: refused off-origin or non-public map URL")
                     continue
-                opener = urllib.request.build_opener(_NoRedirect)
-                with opener.open(safe, timeout=20) as r:
-                    raw = r.read().decode("utf-8", "replace")
+                raw = fetch_pinned(*safe)
+                if raw is None:
+                    notes.append(f"{bundle.name}: map fetch failed")
+                    continue
             smap = json.loads(raw)
         except Exception as e:
             notes.append(f"{bundle.name}: map referenced but unreadable ({str(e)[:70]})")

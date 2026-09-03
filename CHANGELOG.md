@@ -4,6 +4,17 @@ All notable changes to OK-Skills will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2026-09-03
+
+### Security
+
+- **`cloning`: closed a DNS-rebinding gap in `recover_motion_source.py` source-map fetching.** 1.5.1 validated that the map's hostname resolved to a public address, then passed a *URL* to `urllib`, which performed its own second lookup at fetch time. A site whose DNS the attacker controls could answer with a public address for the check and an internal one for the fetch, defeating the validation. The validated address is now returned alongside the URL and the connection is made directly to it, so no second resolution happens. TLS still validates against the real hostname through SNI, so pinning the address does not weaken certificate checking, and `http.client` replaces `urllib` because it does not follow redirects at all.
+- Every address a name resolves to must now be public; previously a multi-record DNS answer could smuggle an internal address past a first-record check. Responses are also size-capped at 25MB.
+- No behaviour change for well-formed sites: detection output on the verification site is unchanged.
+- `package.json` and `.claude-plugin/plugin.json` bumped to `1.5.2` together.
+
+---
+
 ## [1.5.1] - 2026-09-03
 
 ### Security
