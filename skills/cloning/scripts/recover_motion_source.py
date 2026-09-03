@@ -36,6 +36,7 @@ import json
 import re
 import shutil
 import subprocess
+import urllib.request
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
@@ -206,10 +207,85 @@ async def capture(url, routes, outdir, timeout_ms):
     return seen, errors, sorted(attrs)
 
 
+NPM_NAME_RE = re.compile(r"^(?:@[a-z0-9~][a-z0-9._~-]*/)?[a-z0-9~][a-z0-9._~-]*$")
+
+
+def safe_dest(base: Path, src: str, index: int):
+    """Map a source-map path to a file inside `base`, or None if it escapes.
+
+    The `sources` array is attacker-controlled: it is JSON fetched from whatever
+    site is being cloned. Treating those strings as filesystem paths lets a
+    hostile site write anywhere the process can reach. Directory structure is
+    worth preserving for readability, so rather than flattening, each component
+    is filtered and the final path is re-checked against the root.
+    """
+    parts = []
+    for part in src.replace("\\", "/").split("/"):
+        part = part.strip()
+        # Drop traversal, empties, absolute markers, Windows drives and scheme
+        # fragments such as the "webpack:" in "webpack://app/src/index.js".
+        if part in ("", ".", "..") or ":" in part:
+            continue
+        cleaned = re.sub(r"[^A-Za-z0-9._-]", "_", part)
+        if cleaned in ("", ".", "..") or set(cleaned) == {"."}:
+            continue
+        parts.append(cleaned[:100])
+    parts = parts[-8:] or [f"src_{index}.js"]
+
+    root = base.resolve()
+    dest = (root / Path(*parts)).resolve()
+    # Containment check on the resolved paths, so symlinks and any component
+    # that slipped through still cannot land outside the root.
+    if root != dest and root not in dest.parents:
+        return None
+    return dest
+
+
+def safe_map_url(base_url: str, ref: str):
+    """Resolve a sourceMappingURL, or None if it should not be fetched.
+
+    `ref` comes from the remote bundle, so it can point anywhere. Left
+    unchecked it reaches cloud metadata endpoints (169.254.169.254), services
+    on the operator's own network, or local files via file://.
+    """
+    import ipaddress
+    import socket
+
+    try:
+        u = urlparse(urljoin(base_url, ref))
+    except Exception:
+        return None
+    if u.scheme not in ("http", "https"):
+        return None
+
+    host = (u.hostname or "").rstrip(".").lower()
+    origin = (urlparse(base_url).hostname or "").rstrip(".").lower()
+    # A source map belongs to the site that served the bundle. Anything else is
+    # the site steering this tool at a third party.
+    if not host or host != origin:
+        return None
+
+    try:
+        for info in socket.getaddrinfo(host, None):
+            ip = ipaddress.ip_address(info[4][0])
+            if (ip.is_private or ip.is_loopback or ip.is_link_local
+                    or ip.is_reserved or ip.is_multicast):
+                return None
+    except Exception:
+        return None
+    return u.geturl()
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Refuse redirects, so a 302 cannot hop past safe_map_url's checks."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 def resolve_source_maps(outdir, base_url):
     """Free win when present: the original source, with real names and comments."""
     import base64
-    import urllib.request
 
     recovered, pkgs, notes = [], {}, []
     for bundle in sorted((outdir / "bundles").glob("*.js")):
@@ -225,7 +301,12 @@ def resolve_source_maps(outdir, base_url):
             if ref.startswith("data:"):
                 raw = base64.b64decode(ref.split(",", 1)[1]).decode("utf-8", "replace")
             else:
-                with urllib.request.urlopen(urljoin(base_url, ref), timeout=20) as r:
+                safe = safe_map_url(base_url, ref)
+                if safe is None:
+                    notes.append(f"{bundle.name}: refused off-origin or non-public map URL")
+                    continue
+                opener = urllib.request.build_opener(_NoRedirect)
+                with opener.open(safe, timeout=20) as r:
                     raw = r.read().decode("utf-8", "replace")
             smap = json.loads(raw)
         except Exception as e:
@@ -235,11 +316,13 @@ def resolve_source_maps(outdir, base_url):
         contents = smap.get("sourcesContent") or []
         for i, src in enumerate(smap.get("sources") or []):
             mm = re.search(r"node_modules/((?:@[^/]+/)?[^/]+)", src)
-            if mm:
+            if mm and NPM_NAME_RE.match(mm.group(1)):
                 pkgs.setdefault(mm.group(1), set()).add(bundle.name)
             if i < len(contents) and contents[i]:
-                rel = re.sub(r"[^A-Za-z0-9._/-]", "_", re.sub(r"^(\.\./)+", "", src).lstrip("/"))
-                dest = outdir / "sources" / bundle.name[:-3] / (rel or f"src_{i}.js")
+                dest = safe_dest(outdir / "sources" / bundle.name[:-3], src, i)
+                if dest is None:
+                    notes.append(f"{bundle.name}: rejected unsafe source path {src[:80]!r}")
+                    continue
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 dest.write_text(contents[i], encoding="utf-8")
                 recovered.append(str(dest.relative_to(outdir)))
@@ -281,9 +364,16 @@ def fingerprint(outdir, dom_attrs):
 
 
 def npm_exists(pkg, version=None):
+    # Package names extracted from source-map paths are attacker-controlled, so
+    # a name like "--registry" would otherwise be parsed by npm as a flag.
+    if not NPM_NAME_RE.match(pkg or ""):
+        return None
+    if version and not re.match(r"^[0-9]+\.[0-9]+\.[0-9]+$", version):
+        return None
     target = f"{pkg}@{version}" if version else pkg
     try:
-        r = subprocess.run(["npm", "view", target, "version"],
+        # "--" ends option parsing regardless of what follows.
+        r = subprocess.run(["npm", "view", "--", target, "version"],
                            capture_output=True, text=True, timeout=45)
         return r.stdout.strip() if r.returncode == 0 else None
     except Exception:

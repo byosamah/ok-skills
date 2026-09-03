@@ -4,6 +4,19 @@ All notable changes to OK-Skills will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-09-03
+
+### Security
+
+- **`cloning`: hardened `recover_motion_source.py` against hostile sites.** The script fetches and writes content from whatever site is being cloned, so untrusted input is its normal operating condition rather than an edge case. Three issues found by automated review and fixed:
+  - **Arbitrary file write via source-map paths (high).** A source map's `sources` array is JSON served by the remote site, and those strings were used to build output paths. The previous sanitiser stripped `../` only at the start of the string, so `a/../../../../tmp/x` passed through untouched and a hostile map could write anywhere the process could reach. Paths are now filtered component by component, capped in depth, and the resolved destination is re-checked for containment inside the output root. Benign directory structure is still preserved.
+  - **SSRF and local file read via `sourceMappingURL` (medium).** The comment at the end of a bundle was resolved and fetched without validation, so a site could point it at `file:///etc/passwd`, at a service on the operator's network, or at cloud metadata on `169.254.169.254`. Map URLs are now restricted to `http`/`https`, must share the host that served the bundle, must not resolve to a private, loopback, link-local, reserved or multicast address, and redirects are refused so a 302 cannot hop past the check.
+  - **npm argument injection (medium).** Package names extracted from source-map paths were interpolated into `npm view` argv, where a name beginning with `-` would be parsed as a flag. Names are now validated against the npm naming grammar before use, versions must be plain semver, option parsing is terminated with `--`, and invalid names are rejected at extraction so they never enter the report.
+- No behaviour change for well-formed sites: detection output on the two verification sites is byte-identical to 1.5.0.
+- `package.json` and `.claude-plugin/plugin.json` bumped to `1.5.1` together, keeping the two version strings in sync.
+
+---
+
 ## [1.5.0] - 2026-09-03
 
 ### Added
