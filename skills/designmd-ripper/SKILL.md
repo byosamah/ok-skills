@@ -6,10 +6,9 @@ description: |
   Use aggressively whenever the user provides a website URL and asks for: DESIGN.md, design.md, design-md, design system extraction, design tokens, design spec, brand spec, "extract the design", "capture the visual identity", "make a design system from this site", "what is this site's design system", or anything implying turning a live site into a structured design contract. Also fires on mentions of the Stitch design.md format or @google/design.md CLI.
 
   Do NOT use for: generating site code (use `cloning`); design critiques (use `design-review`).
-metadata:
-  model: opus
-  context: fork
-  effort: max
+model: opus
+context: fork
+effort: max
 ---
 
 # Website to DESIGN.md
@@ -189,8 +188,6 @@ In your final message:
 4. The extraction directory, in case the user wants to re-run synthesis
    without re-scraping.
 
-Keep it under ~6 lines.
-
 ---
 
 ## Behavior rules
@@ -208,7 +205,7 @@ Keep it under ~6 lines.
   `rgba()`, `transparent`, CSS shorthand `padding`. Convert to hex and
   single-Dimension on the way out — even though the linter would accept
   the loose forms.
-- **Playwright stays in subagents.** No exceptions, per CLAUDE.md.
+- **Run `extract.py` through a subagent when the Agent tool exists.** Direct Bash is the fallback (Step 1). Never drive `mcp__playwright__*` tools from the main session.
 - **If extraction fails** (site requires login, blocks bots, never
   finishes loading): say so plainly. Offer to retry with `--no-video`,
   with a different subagent, or to extract a partial output. Do not

@@ -23,13 +23,7 @@ effort: max
 
 Clone any website with **100% fidelity**. Not 90%. Not "close enough." 100%.
 
-> **v6.2**: Motion is now *recovered* rather than guessed. A new Step 0 pulls the site's
-> real animation libraries and exact versions off the wire before any code is written, and
-> verification compares at the same animation phase against a measured noise floor instead
-> of at a fixed clock time. See [Step 0](#step-0-recover-the-real-motion-source-do-this-first)
-> and [Verifying Motion](#verifying-motion-without-false-failures).
-
-**THE GOAL IS ALWAYS 100%.** Generate the first draft with Gemini, then push relentlessly — comparing every section, fixing every difference, iterating until the clone is indistinguishable from the original. The skill is not done when the code compiles. It's done when a human cannot tell which is the original and which is the clone.
+The goal is a clone a person cannot tell apart from the original. Gemini writes the first draft. Then compare every section, fix every difference, and repeat. Compiling code is not the finish line; the exit criteria in Step 3g are.
 
 ## The governing principle: don't guess what you can read
 
@@ -46,11 +40,9 @@ and costs one command. Approximating those curves by eye never fully converges.
 Treat Gemini-from-video as the **fallback for whatever remains unexplained**, not as the
 default path.
 
-**BEHAVIOR RULES:**
-- `effort: max` — ALWAYS Maximum Effort. Never suggest simplifying. Never ask "Option A/B/C."
-- **Never declare done early.** Keep comparing, keep fixing, keep iterating.
-- **The visual comparison is the source of truth** — not your memory, not the quality gate, not the SSIM score. If the screenshots don't match, you're not done.
-- **Preserve previous fixes.** In Refine Mode, NEVER regenerate from Gemini. Work with existing code.
+**Behavior rules:**
+- Do not offer simplified alternatives or option menus. The user wants the full clone.
+- The visual comparison is the source of truth, not your memory, the quality gate, or the SSIM score. If the screenshots differ, the clone is not done.
 
 **Architecture:** Playwright-only. No Chrome extension. Deterministic orchestrator + self-healing visual loop.
 
@@ -86,7 +78,7 @@ If the user provides a URL → **Full Clone** (Steps 1-3)
 If the user provides `--refine` + a directory path → **Refine Mode** (Step 3 only on existing clone)
 If the user says "keep fixing", "push to 100%", "refine the clone" → **Refine Mode** on the most recent clone
 
-**CRITICAL:** When in Refine Mode, NEVER regenerate the codebase from Gemini. Work with the existing code. Compare against original, fix differences, iterate. Regeneration destroys previous fixes.
+In Refine Mode, do not regenerate the codebase from Gemini, because regeneration destroys previous fixes. Work with the existing code: compare against the original, fix differences, repeat.
 
 ### Step 0: Recover the real motion source (do this FIRST)
 
@@ -197,8 +189,8 @@ cd ~/Desktop/{site}-clone && npm install && npm run dev
 **3b. Missing section audit (FIRST — before any detail work):**
 
 Screenshot the FULL PAGE of both original and clone. Count the major sections:
-- Original sections: header, hero, marquee, manifesto, transition, timeline, feature-tabs, use-cases, stats, testimonials, CTA, footer
-- Clone sections: count what exists
+- Original sections: list every major section the original has, in order
+- Clone sections: list what exists
 
 If ANY section from the original is MISSING in the clone, build it FIRST:
 1. Read the extraction data for that section (html-content.json, components.json)
@@ -274,14 +266,6 @@ Pass 3: Fix micro differences (shadows, borders, font weights, hover states)
 
 The noise floor is what turns "keep iterating" into something with an end. Read
 [Verifying Motion](#verifying-motion-without-false-failures) before using it.
-
-**CRITICAL:** The goal is 100%. Not 90%. Not "close enough." 100%.
-- Do NOT declare "done" after just one pass.
-- Do NOT say "looks close enough" or "high fidelity" when differences remain.
-- If the original has a rotated orange badge, the clone MUST have a rotated orange badge — not a gray pill.
-- If the original has auto-cycling tabs with a progress bar, the clone MUST have auto-cycling tabs — not a static grid.
-- If the original has 70%/40/20% stats with testimonials, the clone MUST have them — not just a headline.
-- Keep fixing. Keep comparing. Keep iterating. The skill is not done until you cannot tell the difference.
 
 **3h. After visual loop exits, run code quality gate:**
 Phase 9.5 automated checks (TypeScript compilation, no placeholders, etc.)
@@ -488,17 +472,3 @@ After evaluator passes, run automated code checks. Full details: [verification-p
 - **Server-side behavior:** Only client-side appearance cloned
 - **Authentication flows:** Login screens captured but not functional
 - **Dynamic content:** Real-time data shows snapshot values
-
----
-
-## Usage Examples
-
-### Basic Clone
-```
-User: /cloning https://stripe.com
-Claude: [Runs orchestrator → all phases automated]
-        [Sends to Gemini with 3 videos + section close-ups]
-        [Spawns evaluator subagent → scores per dimension]
-        [Phase 9.5: All checks pass]
-        Done! cd ~/Desktop/stripe-clone && npm install && npm run dev
-```

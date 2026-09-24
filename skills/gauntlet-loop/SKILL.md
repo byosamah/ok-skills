@@ -56,7 +56,7 @@ This is where the skill earns its keep, and where most people running this metho
 
 Create the run directory (`~/dev/gauntlet-<slug>/` unless they name one) and fill `reference/` with 3 to 8 real artifacts. Read `references/bar-catalog.md` for how to source and capture the bar in each domain: visual and 3D, web and product UI, writing, backend and systems, marketing, research, audio and video.
 
-Capture the bar *now*, in this session, because this session still has browser automation, MCP servers and web access. The clean room deliberately has none of that. Per the user's standing rule, delegate any browser or Playwright work to a subagent rather than driving it here.
+Capture the bar *now*, in this session, because this session still has browser automation, MCP servers and web access. The clean room deliberately has none of that. Delegate Playwright work to a subagent; claude-in-chrome runs inline, per the global CLAUDE.md.
 
 Then write `reference/BAR.md`: one sentence naming the bar, one sentence on why it is the right yardstick, and the literal comparison instruction the critic will follow.
 

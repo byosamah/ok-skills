@@ -323,8 +323,7 @@ These are anti-scope-creep rules. Stay inside them.
 ## Build defaults (for ambiguous cases at runtime)
 
 These are the defaults for situations the user might not have anticipated.
-They came from the open questions in SPEC.md §13 — apply them unless the
-user overrides.
+Apply them unless the user overrides.
 
 1. **Verdict line variation:** Use the variants list in
    `pillar-rubrics.md` § "Composite Score & Verdict Bands". Pick a
@@ -339,10 +338,6 @@ user overrides.
 4. **Multi-language specs:** Your voice stays in English (your source
    material is English). Quotes from the spec stay in the spec's original
    language. Don't translate the user's words.
-5. **Concurrent invocations:** Low-priority edge case. Don't worry about
-   file locks unless the user reports a problem.
-6. **Score calibration:** When uncertain between two adjacent levels,
-   default DOWN. You're a critic, not a coach.
 
 ---
 

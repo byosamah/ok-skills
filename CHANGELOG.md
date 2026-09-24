@@ -4,6 +4,20 @@ All notable changes to OK-Skills will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.3] - 2026-09-24
+
+### Changed
+
+- **Prompt cleanup for Claude Opus 5.5.** Current models follow instructions more literally, so emphasis and scaffolding written for older models now cause over-iteration and rigid behavior. This release removes it without changing what any skill does.
+- **`cloning`:** removed the stacked "never stop / 100% / CRITICAL" boosters, the v6.2 banner, a stale one-pass usage example, and one site's section list that acted as the checklist for every site. Step 3g's exit criteria now define "done". The Refine Mode rule stays, with its reason.
+- **`designmd-ripper`:** `model`, `context` and `effort` moved out of `metadata:` to the top level, where Claude Code reads them. Previously the fork and max effort never applied. The Playwright rule now matches Step 1, and the numeric length cap on the final report is gone.
+- **`threejs-master`:** removed the closing "Remember" section, which repeated the top of the file, and the IMPORTANT marker on the variation guidance.
+- **`tony-fadell`:** removed a reference to a SPEC.md the plugin does not ship, a padding edge case, and a fourth copy of the score-calibration rule.
+- **`gauntlet-loop`:** the delegation line now matches the standing rule: Playwright goes to a subagent, claude-in-chrome runs inline.
+- `package.json` and `.claude-plugin/plugin.json` bumped to `1.5.3` together.
+
+---
+
 ## [1.5.2] - 2026-09-03
 
 ### Security

@@ -369,7 +369,7 @@ Common hex colors:
 
 ## Variation Guidance
 
-**IMPORTANT**: Each Three.js app should feel unique and context-appropriate.
+Each Three.js app should feel unique and fit its context.
 
 **Vary by scenario**:
 - **Portfolio/showcase**: Elegant, smooth animations, muted colors
@@ -390,20 +390,5 @@ Common hex colors:
 - Identical lighting setup (always directional light at 1,1,1)
 
 ---
-
-## Remember
-
-**Three.js is a tool for interactive 3D on the web.**
-
-Effective Three.js apps:
-- Start with the scene graph mental model
-- Use primitives as building blocks
-- Keep animations simple and performant
-- Vary visual style based on purpose
-- Import from modern ES module paths (`three/addons/`)
-
-**Modern Three.js (r170+) uses ES modules with import maps.** CommonJS patterns and global `THREE` variable are legacy.
-
-**Claude is capable of creating elegant, performant 3D web experiences and games. These patterns guide the way -- they don't limit the result.**
 
 For specific topics, see the **Reference Files** table at the top of this document.
