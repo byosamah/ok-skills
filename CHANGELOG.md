@@ -4,6 +4,16 @@ All notable changes to OK-Skills will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4] - 2026-09-24
+
+### Security
+
+- **`cloning`: Chromium's sandbox is back on in `compare_motion.py` and `recover_motion_source.py`.** Both scripts load arbitrary third-party sites, yet they launched Chromium with `--no-sandbox` unconditionally, so a renderer exploit on a hostile page would run with the operator's full user rights. They now launch with the sandbox on. If the launch fails (the macOS mach port error inside some agent sandboxes), the script stops with a message instead of silently dropping protection. `CLONE_ALLOW_UNSANDBOXED_BROWSER=1` restores the old behavior, prints a warning, and is meant only for runs inside a container or VM.
+- Verified on macOS: both scripts complete with the sandbox on.
+- `package.json` and `.claude-plugin/plugin.json` bumped to `1.5.4` together.
+
+---
+
 ## [1.5.3] - 2026-09-24
 
 ### Changed

@@ -32,7 +32,9 @@ Usage:
 import argparse
 import asyncio
 import json
+import os
 import statistics
+import sys
 from pathlib import Path
 
 # Captures layout and paint state for every rendered element. Elements that
@@ -86,13 +88,36 @@ async (maxMs) => {
 """
 
 
+# Chromium's own sandbox stays on: these scripts load arbitrary third-party
+# sites, so a compromised renderer must not get the operator's full user
+# rights. Some macOS agent sandboxes break Chromium's sandbox with a mach port
+# error. Only there, and only inside a container or VM, set
+# CLONE_ALLOW_UNSANDBOXED_BROWSER=1 to launch with --no-sandbox.
+UNSANDBOXED_ENV = "CLONE_ALLOW_UNSANDBOXED_BROWSER"
+
+
+async def launch_browser(pw):
+    if os.environ.get(UNSANDBOXED_ENV) == "1":
+        print(f"WARNING: {UNSANDBOXED_ENV}=1, launching Chromium with --no-sandbox. "
+              "Hostile pages are not contained. Use only inside a container or VM.",
+              file=sys.stderr)
+        return await pw.chromium.launch(args=["--no-sandbox"])
+    try:
+        return await pw.chromium.launch()
+    except Exception as e:
+        raise SystemExit(
+            f"Chromium failed to start with its sandbox on: {e}\n"
+            f"If this is the macOS mach port error inside an agent sandbox, run the "
+            f"command outside that sandbox. As a last resort, inside a container or VM "
+            f"only, set {UNSANDBOXED_ENV}=1."
+        )
+
+
 async def sample(url, width, settle_ms):
     from playwright.async_api import async_playwright
 
     async with async_playwright() as pw:
-        # --no-sandbox: Chromium's sandbox fails with a mach port error in some
-        # macOS agent environments.
-        browser = await pw.chromium.launch(args=["--no-sandbox"])
+        browser = await launch_browser(pw)
         page = await browser.new_page(viewport={"width": width, "height": 900})
         try:
             await page.goto(url, wait_until="networkidle", timeout=60000)
